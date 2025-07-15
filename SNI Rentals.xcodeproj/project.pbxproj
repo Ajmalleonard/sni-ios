@@ -6,6 +6,18 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A15BC7872E22301600318CCE /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7862E22301600318CCE /* FirebaseAuth */; };
+		A15BC7892E22301600318CCE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7882E22301600318CCE /* FirebaseCore */; };
+		A15BC78B2E22301600318CCE /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC78A2E22301600318CCE /* FirebaseDatabase */; };
+		A15BC78D2E22301600318CCE /* FirebaseInAppMessaging-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC78C2E22301600318CCE /* FirebaseInAppMessaging-Beta */; };
+		A15BC78F2E22301600318CCE /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC78E2E22301600318CCE /* FirebaseMessaging */; };
+		A15BC7912E22301600318CCE /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7902E22301600318CCE /* FirebaseStorage */; };
+		A15BC7942E224DFF00318CCE /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7932E224DFF00318CCE /* GoogleSignIn */; };
+		A15BC7962E224DFF00318CCE /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7952E224DFF00318CCE /* GoogleSignInSwift */; };
+		A1781FBA2E26DDF2005140F1 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A1781FB92E26DDF2005140F1 /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		CEC880222E182B79009D61FD /* SNI Rentals.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SNI Rentals.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +35,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A15BC78B2E22301600318CCE /* FirebaseDatabase in Frameworks */,
+				A15BC7892E22301600318CCE /* FirebaseCore in Frameworks */,
+				A15BC78F2E22301600318CCE /* FirebaseMessaging in Frameworks */,
+				A15BC7962E224DFF00318CCE /* GoogleSignInSwift in Frameworks */,
+				A15BC7872E22301600318CCE /* FirebaseAuth in Frameworks */,
+				A1781FBA2E26DDF2005140F1 /* FirebaseFirestore in Frameworks */,
+				A15BC78D2E22301600318CCE /* FirebaseInAppMessaging-Beta in Frameworks */,
+				A15BC7912E22301600318CCE /* FirebaseStorage in Frameworks */,
+				A15BC7942E224DFF00318CCE /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +86,15 @@
 			);
 			name = "SNI Rentals";
 			packageProductDependencies = (
+				A15BC7862E22301600318CCE /* FirebaseAuth */,
+				A15BC7882E22301600318CCE /* FirebaseCore */,
+				A15BC78A2E22301600318CCE /* FirebaseDatabase */,
+				A15BC78C2E22301600318CCE /* FirebaseInAppMessaging-Beta */,
+				A15BC78E2E22301600318CCE /* FirebaseMessaging */,
+				A15BC7902E22301600318CCE /* FirebaseStorage */,
+				A15BC7932E224DFF00318CCE /* GoogleSignIn */,
+				A15BC7952E224DFF00318CCE /* GoogleSignInSwift */,
+				A1781FB92E26DDF2005140F1 /* FirebaseFirestore */,
 			);
 			productName = "SNI Rentals";
 			productReference = CEC880222E182B79009D61FD /* SNI Rentals.app */;
@@ -94,6 +124,10 @@
 			);
 			mainGroup = CEC880192E182B79009D61FD;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A15BC7922E224DFF00318CCE /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CEC880232E182B79009D61FD /* Products */;
 			projectDirPath = "";
@@ -256,6 +290,7 @@
 				DEVELOPMENT_TEAM = ZX5H4FT3NV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SNI-Rentals-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -287,6 +322,7 @@
 				DEVELOPMENT_TEAM = ZX5H4FT3NV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SNI-Rentals-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -330,6 +366,72 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.15.0;
+			};
+		};
+		A15BC7922E224DFF00318CCE /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A15BC7862E22301600318CCE /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		A15BC7882E22301600318CCE /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		A15BC78A2E22301600318CCE /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		A15BC78C2E22301600318CCE /* FirebaseInAppMessaging-Beta */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseInAppMessaging-Beta";
+		};
+		A15BC78E2E22301600318CCE /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		A15BC7902E22301600318CCE /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		A15BC7932E224DFF00318CCE /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A15BC7922E224DFF00318CCE /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		A15BC7952E224DFF00318CCE /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A15BC7922E224DFF00318CCE /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		A1781FB92E26DDF2005140F1 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CEC8801A2E182B79009D61FD /* Project object */;
 }
