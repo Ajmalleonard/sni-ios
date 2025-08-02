@@ -9,6 +9,43 @@ import SwiftUI
 import Firebase
 import FirebaseFirestore
 import Combine
+// Define ChatNotificationType directly in this file
+import struct Foundation.Date
+
+// Chat Notification Type for use in this file
+enum ChatNotificationType {
+    case general, support, booking, payment, system
+    
+    var iconName: String {
+        switch self {
+        case .general: return "bell.fill"
+        case .support: return "questionmark.circle.fill"
+        case .booking: return "car.fill"
+        case .payment: return "creditcard.fill"
+        case .system: return "gear.circle.fill"
+        }
+    }
+    
+    var backgroundColor: Color {
+        switch self {
+        case .general: return .blue.opacity(0.2)
+        case .support: return .orange.opacity(0.2)
+        case .booking: return .green.opacity(0.2)
+        case .payment: return .purple.opacity(0.2)
+        case .system: return .gray.opacity(0.2)
+        }
+    }
+    
+    var iconColor: Color {
+        switch self {
+        case .general: return .blue
+        case .support: return .orange
+        case .booking: return .green
+        case .payment: return .purple
+        case .system: return .gray
+        }
+    }
+}
 
 struct ChatScreen: View {
     @EnvironmentObject var authModel: AuthModel
@@ -18,35 +55,14 @@ struct ChatScreen: View {
     @State private var messageText = ""
     @State private var selectedChat: ChatConversation?
     @State private var showingNotifications = false
-    
     enum ChatTab {
         case chats, notifications
     }
-    
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
                 // Custom Tab Bar
-                HStack(spacing: 0) {
-                    TabButton(
-                        title: "Chats",
-                        isSelected: selectedTab == .chats,
-                        unreadCount: chatManager.unreadChatsCount
-                    ) {
-                        selectedTab = .chats
-                    }
-                    
-                    TabButton(
-                        title: "Notifications",
-                        isSelected: selectedTab == .notifications,
-                        unreadCount: chatManager.unreadNotificationsCount
-                    ) {
-                        selectedTab = .notifications
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(Color(.systemGroupedBackground))
+
                 
                 // Content
                 Group {
@@ -64,29 +80,13 @@ struct ChatScreen: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Messages")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden()
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .foregroundColor(.primary)
-                    }
-                }
+               
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        // Create new chat or refresh
-                        chatManager.refreshData()
-                    } label: {
-                        Image(systemName: "plus.message")
-                            .foregroundColor(.blue)
-                    }
-                }
-            }
+            
+             }
             .onAppear {
                 chatManager.startListening()
                 chatManager.loadUserData(authModel.currentUser)
@@ -358,45 +358,12 @@ struct AppNotification: Identifiable {
     let id: String
     let title: String
     let message: String
-    let type: NotificationType
+    let type: ChatNotificationType
     let timestamp: Date
     let isRead: Bool
     let actionData: [String: Any]?
 }
 
-enum NotificationType {
-    case general, support, booking, payment, system
-    
-    var iconName: String {
-        switch self {
-        case .general: return "bell.fill"
-        case .support: return "questionmark.circle.fill"
-        case .booking: return "car.fill"
-        case .payment: return "creditcard.fill"
-        case .system: return "gear.circle.fill"
-        }
-    }
-    
-    var backgroundColor: Color {
-        switch self {
-        case .general: return .blue.opacity(0.2)
-        case .support: return .orange.opacity(0.2)
-        case .booking: return .green.opacity(0.2)
-        case .payment: return .purple.opacity(0.2)
-        case .system: return .gray.opacity(0.2)
-        }
-    }
-    
-    var iconColor: Color {
-        switch self {
-        case .general: return .blue
-        case .support: return .orange
-        case .booking: return .green
-        case .payment: return .purple
-        case .system: return .gray
-        }
-    }
-}
 
 // MARK: - Chat Manager
 class ChatManager: ObservableObject {
@@ -519,7 +486,7 @@ class ChatManager: ObservableObject {
             return nil
         }
         
-        let type: NotificationType
+        let type: ChatNotificationType
         switch typeString {
         case "support": type = .support
         case "booking": type = .booking

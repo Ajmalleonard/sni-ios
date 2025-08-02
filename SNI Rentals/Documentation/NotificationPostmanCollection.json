@@ -1,0 +1,223 @@
+{
+	"info": {
+		"_postman_id": "8f5e2a6b-9c7d-4a5e-8d14-3e9b4f2c8d1a",
+		"name": "SNI Notifications API",
+		"description": "API collection for SNI Rentals notification system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Notifications",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/notifications?page=1&limit=20&type=CHAT",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"notifications"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "20"
+						},
+						{
+							"key": "type",
+							"value": "CHAT"
+						}
+					]
+				},
+				"description": "Retrieves paginated notifications for the authenticated user"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Unread Notification Count",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/notifications/unread-count",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"notifications",
+						"unread-count"
+					]
+				},
+				"description": "Gets the count of unread notifications for the authenticated user"
+			},
+			"response": []
+		},
+		{
+			"name": "Mark Notifications as Read",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"notificationIds\": [\"notification_id_1\", \"notification_id_2\"]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/notifications/read",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"notifications",
+						"read"
+					]
+				},
+				"description": "Marks one or more notifications as read"
+			},
+			"response": []
+		},
+		{
+			"name": "Mark All Notifications as Read",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/notifications/read-all",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"notifications",
+						"read-all"
+					]
+				},
+				"description": "Marks all notifications as read for the authenticated user"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Notification",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/notifications/:id",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"notifications",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "notification_id_here"
+						}
+					]
+				},
+				"description": "Deletes a specific notification"
+			},
+			"response": []
+		},
+		{
+			"name": "Update Notification Preferences",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"preferences\": {\n    \"CHAT\": true,\n    \"RENTAL\": true,\n    \"PAYMENT\": true,\n    \"SYSTEM\": true,\n    \"PROMOTION\": false\n  },\n  \"pushEnabled\": true,\n  \"emailEnabled\": false\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/notifications/preferences",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"notifications",
+						"preferences"
+					]
+				},
+				"description": "Updates notification preferences for the authenticated user"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Notification Preferences",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/notifications/preferences",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"notifications",
+						"preferences"
+					]
+				},
+				"description": "Gets notification preferences for the authenticated user"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://api.snicolt.com"
+		},
+		{
+			"key": "access_token",
+			"value": "your_access_token_here"
+		}
+	]
+} 

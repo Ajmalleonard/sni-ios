@@ -255,6 +255,7 @@ struct ProfileView: View {
                 Text("Are you sure you want to permanently delete your account? This action cannot be undone.")
             }
         }
+        .loadingOverlay(isLoading: authModel.isLoading)
     }
 }
 

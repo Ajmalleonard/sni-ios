@@ -62,20 +62,13 @@ struct ForgotPasswordView: View {
                         
                         if step == .enterEmail {
                             Button(action: requestResetCode) {
-                                if isLoading {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle())
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                } else {
-                                    Text("Send Reset Code")
-                                        .fontWeight(.semibold)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(Color("Secondary"))
-                                        .foregroundColor(Color("Primary"))
-                                        .clipShape(Capsule())
-                                }
+                                Text("Send Reset Code")
+                                    .fontWeight(.semibold)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color("Secondary"))
+                                    .foregroundColor(Color("Primary"))
+                                    .clipShape(Capsule())
                             }
                             .disabled(isLoading || !isValidEmail(email))
                         }
@@ -108,20 +101,13 @@ struct ForgotPasswordView: View {
                                 )
                             
                             Button(action: resetPassword) {
-                                if isLoading {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle())
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                } else {
-                                    Text("Reset Password")
-                                        .fontWeight(.semibold)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(Color("Secondary"))
-                                        .foregroundColor(Color("Primary"))
-                                        .clipShape(Capsule())
-                                }
+                                Text("Reset Password")
+                                    .fontWeight(.semibold)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color("Secondary"))
+                                    .foregroundColor(Color("Primary"))
+                                    .clipShape(Capsule())
                             }
                             .disabled(isLoading || newPassword.count < 6)
                         }
@@ -147,6 +133,7 @@ struct ForgotPasswordView: View {
                 .padding(.horizontal, 32)
             }
         }
+        .loadingOverlay(isLoading: authModel.isLoading)
     }
     
     private func requestResetCode() {

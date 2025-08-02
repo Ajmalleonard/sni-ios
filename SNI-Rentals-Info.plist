@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.924727721829-31o1og730ceh5o7084epg3ioaumndrca</string>
+			</array>
+		</dict>
+	</array>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>SNI Rentals needs your location to show nearby vehicles and provide directions.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>SNI Rentals needs your location to show nearby vehicles, provide directions, and track your rental journey.</string>
+</dict>
+</plist>

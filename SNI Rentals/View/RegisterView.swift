@@ -224,6 +224,7 @@ struct RegisterView: View {
             }
         }
         .navigationBarHidden(true)
+        .loadingOverlay(isLoading: authModel.isLoading)
     }
     
     var codeField: some View {

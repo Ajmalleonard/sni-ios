@@ -32,9 +32,10 @@ struct ChatDetailView: View {
                                     .padding(.top, 100)
                             } else {
                                 ForEach(messages) { message in
+                                    let isCurrentUser = message.senderId == authModel.currentUser?.id
                                     MessageBubbleView(
                                         message: message,
-                                        isCurrentUser: message.senderId == authModel.currentUser?.id
+                                        isCurrentUser: isCurrentUser
                                     )
                                     .id(message.id)
                                 }
@@ -277,9 +278,9 @@ struct MessageInputView: View {
             
             Button(action: onSend) {
                 if isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .frame(width: 20, height: 20)
+                    CustomLoadingView()
+                        .frame(width: 30, height: 30)
+                        .scaleEffect(0.5)
                 } else {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.title2)
@@ -342,3 +343,4 @@ struct ChatMessage: Identifiable {
     )
     .environmentObject(AuthModel())
 } 
+ 

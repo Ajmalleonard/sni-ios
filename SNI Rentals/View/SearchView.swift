@@ -33,7 +33,7 @@ enum NavigationDestination: Hashable {
     case notifications
 }
 
-struct HomeView: View {
+struct SearchView: View {
     @EnvironmentObject var authModel: AuthModel
     @State private var showProfileSheet: Bool = false
     
@@ -152,22 +152,7 @@ struct HomeView: View {
                     .padding([.leading, .top], 15)
                     .animation(.easeInOut(duration: 0.3), value: isShowingProfile)
             }
-            .overlay(alignment: .topTrailing) {
-                HStack(spacing: 12) {
-                    // Notification Button
-                    NotificationButton(navigationPath: $navigationPath, viewModel: notificationViewModel)
-                        .opacity(isShowingProfile ? 0 : toolbarOpacity)
-                        .scaleEffect(isShowingProfile ? 0.8 : 1.0)
-                        .animation(.easeInOut(duration: 0.3), value: isShowingProfile)
-                    
-                    // Message Button
-                    FloatingMessageButton(navigationPath: $navigationPath)
-                        .opacity(isShowingProfile ? 0 : toolbarOpacity)
-                        .scaleEffect(isShowingProfile ? 0.8 : 1.0)
-                        .animation(.easeInOut(duration: 0.3), value: isShowingProfile)
-                }
-                .padding([.trailing, .top], 15)
-            }
+      
             .onChange(of: sheetDetent) { _, newValue in
                 // Simplified opacity calculation
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -296,20 +281,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 }
 
-// MARK: - Optimized Floating Button
-struct FloatingButton: View {
-    let icon: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.primary)
-        }
-    }
-}
-
 
 // MARK: - Optimized Profile Image Component
 struct ProfileImage: View {
@@ -325,7 +296,10 @@ struct ProfileImage: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
-                    ProfileInitials(displayName: displayName)
+                    CustomLoadingView()
+                        .scaleEffect(0.3)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color(.systemGray6))
                 }
             } else {
                 ProfileInitials(displayName: displayName)
@@ -710,45 +684,10 @@ struct RentalCard: View {
     }
 }
 
-// MARK: - Floating Message Button
-struct FloatingMessageButton: View {
-    @Binding var navigationPath: NavigationPath
-    @State private var hasUnreadMessages = true // This will be connected to Firebase later
-    
-    var body: some View {
-        Button {
-            print("💬 Message button tapped!")
-            print("💬 Navigating to chat screen")
-            navigationPath.append(NavigationDestination.chat)
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: 50, height: 50)
-                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                
-                Image(systemName: "message.fill")
-                    .font(.title3)
-                    .foregroundColor(.blue)
-                
-                // Notification badge
-                if hasUnreadMessages {
-                    Circle()
-                        .fill(Color.red)
-                        .frame(width: 16, height: 16)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white, lineWidth: 2)
-                        )
-                        .offset(x: 18, y: -18)
-                }
-            }
-        }
-    }
-}
+
 
 #Preview {
-    HomeView()
+    SearchView()
         .environmentObject(AuthModel())
 }
 

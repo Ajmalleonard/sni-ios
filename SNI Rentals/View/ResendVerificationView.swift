@@ -50,23 +50,16 @@ struct ResendVerificationView: View {
                                     .stroke(Color("Accent"), lineWidth: 1)
                             )
                         
-                        Button(action: { authModel.requestEmailVerification(email: email) }) {
-                            if authModel.isLoading {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                            } else {
-                                Text("Resend Code")
-                                    .fontWeight(.semibold)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color("Secondary"))
-                                    .foregroundColor(Color("Primary"))
-                                    .clipShape(Capsule())
-                            }
+                        Button(action: resendVerification) {
+                            Text("Resend Verification Email")
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color("Secondary"))
+                                .foregroundColor(Color("Primary"))
+                                .clipShape(Capsule())
                         }
-                        .disabled(authModel.isLoading || !isValidEmail(email))
+                        .disabled(authModel.isLoading || email.isEmpty)
                     }
                     
                     // Error and Success Messages
@@ -101,6 +94,7 @@ struct ResendVerificationView: View {
                 .padding(.horizontal, 32)
             }
         }
+        .loadingOverlay(isLoading: authModel.isLoading)
         .onChange(of: authModel.successMessage) { newValue in
             if newValue != nil {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

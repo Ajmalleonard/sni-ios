@@ -69,20 +69,13 @@ struct ChangePasswordView: View {
                             )
                         
                         Button(action: { authModel.changePassword(currentPassword: currentPassword, newPassword: newPassword) }) {
-                            if authModel.isLoading {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                            } else {
-                                Text("Update Password")
-                                    .fontWeight(.semibold)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color("Secondary"))
-                                    .foregroundColor(Color("Primary"))
-                                    .clipShape(Capsule())
-                            }
+                            Text("Update Password")
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color("Secondary"))
+                                .foregroundColor(Color("Primary"))
+                                .clipShape(Capsule())
                         }
                         .disabled(authModel.isLoading || !isValidInput)
                     }
@@ -132,6 +125,9 @@ struct ChangePasswordView: View {
                 }
             }
         }
+        .loadingOverlay(isLoading: authModel.isLoading)
+        .navigationTitle("Change Password")
+        .navigationBarTitleDisplayMode(.large)
     }
     
     private var isValidInput: Bool {

@@ -75,7 +75,7 @@ struct FastTextFieldWithIcon: View {
             Group {
                 if isBordered {
                     RoundedRectangle(cornerRadius: 15)
-                        .stroke(Color("Accent"), lineWidth: 1)
+                .stroke(Color("Accent"), lineWidth: 1)
                 }
             }
         )

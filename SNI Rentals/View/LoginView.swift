@@ -97,20 +97,13 @@ struct LoginView: View {
                     .padding(.horizontal, 32)
                     
                     Button(action: login) {
-                        if authModel.isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                        } else {
-                            Text("Sign in")
-                                .fontWeight(.semibold)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color("Secondary"))
-                                .foregroundColor(Color("Primary"))
-                                .clipShape(Capsule())
-                        }
+                        Text("Sign in")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color("Secondary"))
+                            .foregroundColor(Color("Primary"))
+                            .clipShape(Capsule())
                     }
                     .disabled(authModel.isLoading)
                     .padding(.horizontal, 32)
@@ -182,6 +175,7 @@ struct LoginView: View {
             }
         }
         .navigationBarHidden(true)
+        .loadingOverlay(isLoading: authModel.isLoading)
     }
     
     private func login() {
