@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Sample car model matching schema.prisma crucial fields (excluding price)
+
 struct CarDisplay: Identifiable {
     let id: String
     let make: String
@@ -51,13 +51,17 @@ struct HomeView: View {
             ZStack(alignment: .bottom) {
                 // Main content based on selected tab
                 Group {
-                    switch selectedTab {
-                    case .home:
-                        homeContent
-                    case .rides:
-                        ScheduleTripView()
-                    case .explore:
-                        ExploreView()
+                    if #available(iOS 18.0, *) {
+                        switch selectedTab {
+                        case .home:
+                            homeContent
+                        case .rides:
+                            ScheduleTripView()
+                        case .explore:
+                            ExploreView()
+                        }
+                    } else {
+                        // Fallback on earlier versions
                     }
                 }
                 
@@ -71,6 +75,7 @@ struct HomeView: View {
         }
     }
     
+    @available(iOS 18.0, *)
     var homeContent: some View {
         ZStack(alignment:.top) {
             backgroundGradient.ignoresSafeArea()
@@ -309,3 +314,4 @@ struct BottomNavigationBar: View {
 #Preview {
     HomeView().environmentObject(AuthModel())
 }
+

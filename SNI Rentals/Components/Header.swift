@@ -252,7 +252,8 @@ struct RoundedCorners: Shape {
 
 // MARK: - Minimal Auth Model for Preview --------------------------------------
 // MARK: Dark‑green mesh background  (iOS 17+)
- var backgroundGradient: some View {
+@available(iOS 18.0, *)
+var backgroundGradient: some View {
     MeshGradient(
         width: 3,                       // 3 columns
         height: 3,                      // 3 rows

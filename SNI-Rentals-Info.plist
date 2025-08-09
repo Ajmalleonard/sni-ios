@@ -13,9 +13,5 @@
 			</array>
 		</dict>
 	</array>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>SNI Rentals needs your location to show nearby vehicles and provide directions.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>SNI Rentals needs your location to show nearby vehicles, provide directions, and track your rental journey.</string>
 </dict>
 </plist>
