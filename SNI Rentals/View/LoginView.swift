@@ -124,7 +124,7 @@ struct LoginView: View {
                     
                     VStack(spacing: 12) {
                         Button {
-                            // TODO: Apple Sign In
+                            signInWithApple()
                         } label: {
                             HStack {
                                 Image(systemName: "apple.logo")
@@ -184,6 +184,10 @@ struct LoginView: View {
     
     private func signInWithGoogle() {
         authModel.signInWithGoogle()
+    }
+    
+    private func signInWithApple() {
+        authModel.signInWithApple()
     }
 }
 

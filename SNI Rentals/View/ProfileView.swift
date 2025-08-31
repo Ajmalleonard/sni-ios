@@ -24,49 +24,8 @@ struct ProfileView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     // Header Section
-                    VStack(spacing:0, ){
-                        HStack(alignment:.center,spacing: 16) {
-                        // Profile Picture
-                        AsyncImage(url: URL(string: authModel.currentUser?.profilePicture ?? "")) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Circle()
-                                    .fill(Color.blue.opacity(0.2))
-                                .overlay(
-                                    Text(authModel.currentUser?.displayName.prefix(1).uppercased() ?? "U")
-                                        .font(.title)
-                                        .fontWeight(.semibold)
-                                            .foregroundColor(.blue)
-                                )
-                        }
-                            .frame(width: 50, height: 50)
-                        .clipShape(Circle())
-                        
-                            // Name and Email Section
-                            VStack( spacing: 1) {
-                                VStack(alignment: .leading) {
-                            Text(authModel.currentUser?.displayName ?? "User")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                        .foregroundColor(.primary)
-                                    
-                                    Text(authModel.currentUser?.email ?? "useremail@sni.com")
-                                }
-                            }
-                            Spacer()
-                            
-                            
-                        
-                        }
+                    ProfileHeaderView()
                         .padding(.horizontal, 20)
-                        .padding(.vertical, 20)
-                        .frame(maxWidth: .infinity)
-                        .background(Color("Primary"))
-                        .clipShape(RoundedRectangle(cornerRadius: 25))
-                    }
-                    .padding(.horizontal, 20)
                 
                 // MARK : Badge zone
                     
@@ -76,66 +35,7 @@ struct ProfileView: View {
                     VStack(spacing: 15) {
                         // Main Menu Items
                         Badge()
-                        VStack(spacing: 0) {
-                            ProfileMainMenuItem(
-                                icon: "person.circle",
-                                title: "Personal info",
-                                subtitle: "User details and profile information",
-                                destination: PersonalInfoView()
-                            )
-                            
-                            Divider()
-                                .padding(.leading, 60)
-                            
-                            ProfileMainMenuItem(
-                                icon: "shield.checkered",
-                                title: "Safety",
-                                subtitle: "Trusted contacts, family, emergency info",
-                                destination: SafetyView()
-                            )
-                            
-                            Divider()
-                                .padding(.leading, 60)
-                            
-                            ProfileMainMenuItem(
-                                icon: "key.horizontal",
-                                title: "Login & Security",
-                                subtitle: "Password, two-factor authentication",
-                                destination: LoginSecurityView()
-                            )
-                            
-                            Divider()
-                                .padding(.leading, 60)
-                            
-                            ProfileMainMenuItem(
-                                icon: "eye.slash",
-                                title: "Privacy",
-                                subtitle: "Data privacy and location settings",
-                                destination: PrivacyView()
-                            )
-                            
-                            Divider()
-                                .padding(.leading, 60)
-                            
-                            ProfileMainMenuItem(
-                                icon: "globe",
-                                title: "Language",
-                                subtitle: "App language preferences",
-                                destination: LanguageView()
-                            )
-                            
-                            Divider()
-                                .padding(.leading, 60)
-                            
-                            ProfileMainMenuItem(
-                                icon: "calendar",
-                                title: "Calendars",
-                                subtitle: "Sync external calendars",
-                                destination: CalendarsView()
-                            )
-                        }
-                        .background(Color("Primary"))
-                        .clipShape(RoundedRectangle(cornerRadius: 25))
+                        ProfileMainMenuSection()
                         
                         // Account Actions Section
                         VStack(spacing: 0) {
@@ -259,6 +159,118 @@ struct ProfileView: View {
     }
 }
 
+// MARK: - Profile Header Component
+struct ProfileHeaderView: View {
+    @EnvironmentObject var authModel: AuthModel
+    
+    var body: some View {
+        HStack(alignment: .center, spacing: 16) {
+            // Profile Picture
+            AsyncImage(url: URL(string: authModel.currentUser?.profilePicture ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Circle()
+                    .fill(Color.blue.opacity(0.2))
+                    .overlay(
+                        Text(authModel.currentUser?.displayName.prefix(1).uppercased() ?? "U")
+                            .font(.title)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.blue)
+                    )
+            }
+            .frame(width: 50, height: 50)
+            .clipShape(Circle())
+            
+            // Name and Email Section
+            VStack(alignment: .leading, spacing: 1) {
+                Text(authModel.currentUser?.displayName ?? "User")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                
+                Text(authModel.currentUser?.email ?? "useremail@sni.com")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 20)
+        .frame(maxWidth: .infinity)
+        .background(Color("Primary"))
+        .clipShape(RoundedRectangle(cornerRadius: 25))
+    }
+}
+
+// MARK: - Profile Main Menu Section
+struct ProfileMainMenuSection: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            ProfileMainMenuItem(
+                icon: "person.circle",
+                title: "Personal info",
+                subtitle: "User details and profile information",
+                destination: PersonalInfoView()
+            )
+            
+            Divider()
+                .padding(.leading, 60)
+            
+            ProfileMainMenuItem(
+                icon: "shield.checkered",
+                title: "Safety",
+                subtitle: "Trusted contacts, family, emergency info",
+                destination: SafetyView()
+            )
+            
+            Divider()
+                .padding(.leading, 60)
+            
+            ProfileMainMenuItem(
+                icon: "key.horizontal",
+                title: "Login & Security",
+                subtitle: "Password, two-factor authentication",
+                destination: LoginSecurityView()
+            )
+            
+            Divider()
+                .padding(.leading, 60)
+            
+            ProfileMainMenuItem(
+                icon: "eye.slash",
+                title: "Privacy",
+                subtitle: "Data privacy and location settings",
+                destination: PrivacyView()
+            )
+            
+            Divider()
+                .padding(.leading, 60)
+            
+            ProfileMainMenuItem(
+                icon: "globe",
+                title: "Language",
+                subtitle: "App language preferences",
+                destination: LanguageView()
+            )
+            
+            Divider()
+                .padding(.leading, 60)
+            
+            ProfileMainMenuItem(
+                icon: "calendar",
+                title: "Calendars",
+                subtitle: "Sync external calendars",
+                destination: CalendarsView()
+            )
+        }
+        .background(Color("Primary"))
+        .clipShape(RoundedRectangle(cornerRadius: 25))
+    }
+}
+
 // MARK: - Profile Section Container
 struct ProfileSection<Content: View>: View {
     let title: String
@@ -275,7 +287,7 @@ struct ProfileSection<Content: View>: View {
                 Text(title)
                     .font(.footnote)
                     .fontWeight(.medium)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color("Secondary"))
                     .textCase(.uppercase)
                     .padding(.horizontal, 25)
             }
@@ -283,7 +295,7 @@ struct ProfileSection<Content: View>: View {
             VStack(spacing: 0) {
                 content
             }
-            .background(Color("Primary"))
+           
             .clipShape(RoundedRectangle(cornerRadius: 25))
         }
     }
@@ -893,6 +905,8 @@ struct CalendarsView: View {
 }
 
 #Preview {
-    ProfileView()
-        .environmentObject(AuthModel())
-} 
+    let mockAuthModel = AuthModel()
+    mockAuthModel.isPreview = true
+    return ProfileView()
+        .environmentObject(mockAuthModel)
+}

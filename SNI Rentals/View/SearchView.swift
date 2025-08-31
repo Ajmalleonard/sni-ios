@@ -6,18 +6,19 @@
 //
 
 import SwiftUI
-import MapKit
+import GoogleMaps
 import CoreLocation
-import Combine
 
-/// Dar es Salaam Coordinates
-extension MKCoordinateRegion {
-    static let darEsSalaam = MKCoordinateRegion(
-        center: .init(latitude: -6.7924, longitude: 39.2083),
-        latitudinalMeters: 1000,
-        longitudinalMeters: 1000
+
+
+let darEsSalaam = GMSCameraPosition.camera(
+        withLatitude: -6.7924,
+        longitude: 39.2083,
+        zoom: 15.0
     )
-}
+
+
+
 
 // Make CLLocationCoordinate2D conform to Equatable
 extension CLLocationCoordinate2D: @retroactive Equatable {
@@ -26,29 +27,35 @@ extension CLLocationCoordinate2D: @retroactive Equatable {
     }
 }
 
-// Navigation destination enum
-enum NavigationDestination: Hashable {
-    case profile
-    case chat
-    case notifications
+
+
+// Route information model
+struct RouteInfo {
+    let fromLocation: SearchLocation
+    let toLocation: SearchLocation
+    let distance: String
+    let duration: String
+    let estimatedCost: String
+    let routePolyline: String? // For drawing the route on map
+    
+    var summary: String {
+        "\(distance) • \(duration) • \(estimatedCost)"
+    }
 }
+
+// Enums moved to SharedTypes.swift
 
 struct SearchView: View {
     @EnvironmentObject var authModel: AuthModel
     @State private var showProfileSheet: Bool = false
     
-    /// Bottom Sheet Properties - Simplified
-    @State private var showBottomSheet: Bool = true
-    @State private var sheetDetent: PresentationDetent = .height(80)
+    /// UI State Properties
     @State private var toolbarOpacity: CGFloat = 1
-    
-    /// Profile Sheet Properties
-    @State private var profileSheetDetent: PresentationDetent = .large
     
     /// Location Properties
     @StateObject private var locationManager = LocationManager()
     @StateObject private var notificationViewModel = NotificationViewModel()
-    @State private var mapPosition = MapCameraPosition.region(.darEsSalaam)
+    @State private var mapPosition = darEsSalaam
     @State private var showPermissionAlert = false
     
     // Navigation path for programmatic navigation
@@ -56,6 +63,13 @@ struct SearchView: View {
     
     // Track if we're showing profile to hide bottom sheet
     @State private var isShowingProfile = false
+    
+    // Search screen presentation
+    @State private var showingSearchScreen = false
+    
+    // Route information from search
+    @State private var selectedRoute: RouteInfo?
+    @State private var showRouteOverlay = false
     
     // Pre-computed iOS version check
     private let isModernIOS = {
@@ -68,32 +82,22 @@ struct SearchView: View {
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            Map(position: $mapPosition) {
-                // Show user location with UserAnnotation
-                UserAnnotation()
-            }
-            .mapControls {
-                MapUserLocationButton()
-                MapCompass()
-                MapScaleView()
-            }
-            .mapStyle(.standard(elevation: .realistic))
-            .sheet(isPresented: .constant(showBottomSheet && !isShowingProfile)) {
-                BottomSheetViews(sheetDetent: $sheetDetent, navigationPath: $navigationPath)
-                    .presentationDetents([.height(80), .height(350), .large], selection: $sheetDetent)
-                    .presentationBackgroundInteraction(.enabled)
-                    .presentationCornerRadius(isModernIOS ? nil : 30)
-                    .presentationDragIndicator(.visible)
-                    .presentationBackground {
-                        if !isModernIOS {
-                            Rectangle()
-                                .fill(.ultraThinMaterial)
+            GoogleMapsView(mapPosition: $mapPosition)
+                .ignoresSafeArea()
+                .onAppear {
+                    GoogleMapsConfiguration.configure()
+                }
+            .overlay(alignment: .bottom) {
+                if !isShowingProfile && !showingSearchScreen {
+                    SearchBottomSheet(
+                        navigationPath: $navigationPath,
+                        showingSearchScreen: $showingSearchScreen,
+                        onProfileTap: {
+                            navigationPath.append(NavigationDestination.profile)
                         }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea()
-                    .interactiveDismissDisabled()
-                    .environmentObject(authModel)
+                    )
+                    .transition(.move(edge: .bottom))
+                }
             }
             .navigationDestination(for: NavigationDestination.self) { destination in
                 switch destination {
@@ -152,13 +156,26 @@ struct SearchView: View {
                     .padding([.leading, .top], 15)
                     .animation(.easeInOut(duration: 0.3), value: isShowingProfile)
             }
-      
-            .onChange(of: sheetDetent) { _, newValue in
-                // Simplified opacity calculation
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    toolbarOpacity = newValue == .height(80) ? 1.0 : 0.3
+            .overlay(alignment: .bottom) {
+                if let route = selectedRoute, showRouteOverlay {
+                    RouteOverlayView(
+                        route: route,
+                        onClose: {
+                            selectedRoute = nil
+                            showRouteOverlay = false
+
+                        },
+                        onBookRide: {
+                            // Handle ride booking
+                            print("Booking ride for route: \(route.summary)")
+                        }
+                    )
+                    .padding(.bottom, 100) // Above the bottom sheet
+                    .animation(.spring(response: 0.6), value: showRouteOverlay)
                 }
             }
+      
+
             .onAppear {
                 locationManager.requestLocationPermission()
                 
@@ -166,12 +183,10 @@ struct SearchView: View {
                 locationManager.onLocationUpdate = { location in
                     // Center map on user's location when it updates
                     withAnimation(.easeInOut(duration: 0.5)) {
-                        mapPosition = .region(
-                            MKCoordinateRegion(
-                                center: location,
-                                latitudinalMeters: 1000,
-                                longitudinalMeters: 1000
-                            )
+                        mapPosition = GMSCameraPosition.camera(
+                            withLatitude: location.latitude,
+                            longitude: location.longitude,
+                            zoom: 15.0
                         )
                     }
                 }
@@ -208,6 +223,30 @@ struct SearchView: View {
             } message: {
                 Text("Please allow location access to see your position on the map and find nearby rentals.")
             }
+            .sheet(isPresented: $showingSearchScreen) {
+                SearchScreen(
+                    onRouteSelected: { fromLocation, toLocation in
+                        // Create route info (in real app, this would come from routing API)
+                        let route = RouteInfo(
+                            fromLocation: fromLocation,
+                            toLocation: toLocation,
+                            distance: "12.5 km",
+                            duration: "18 min",
+                            estimatedCost: "$15-20",
+                            routePolyline: nil
+                        )
+                        
+                        selectedRoute = route
+                        showRouteOverlay = true
+                        showingSearchScreen = false
+                        
+                        // Hide bottom sheet when showing route
+                        
+                    },
+                    isPreview: authModel.isPreview
+                )
+                .environmentObject(authModel)
+            }
         }
     }
     
@@ -228,469 +267,197 @@ struct SearchView: View {
     }
 }
 
-// MARK: - Location Manager
-class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let locationManager = CLLocationManager()
-    
-    @Published var userLocation: CLLocationCoordinate2D?
-    @Published var authorizationStatus: CLAuthorizationStatus
-    
-    var onLocationUpdate: ((CLLocationCoordinate2D) -> Void)?
-    
-    override init() {
-        self.authorizationStatus = locationManager.authorizationStatus
-        
-        super.init()
-        
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 10 // Update location every 10 meters
-    }
-    
-    func requestLocationPermission() {
-        locationManager.requestWhenInUseAuthorization()
-    }
-    
-    func startUpdatingLocation() {
-        locationManager.startUpdatingLocation()
-    }
-    
-    func stopUpdatingLocation() {
-        locationManager.stopUpdatingLocation()
-    }
-    
-    // MARK: - CLLocationManagerDelegate
-    
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        DispatchQueue.main.async {
-            self.authorizationStatus = manager.authorizationStatus
-        }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        
-        DispatchQueue.main.async {
-            self.userLocation = location.coordinate
-            self.onLocationUpdate?(location.coordinate)
-        }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location manager failed with error: \(error.localizedDescription)")
-    }
-}
 
 
-// MARK: - Optimized Profile Image Component
-struct ProfileImage: View {
-    let url: String?
-    let displayName: String
-    let size: CGFloat
+
+// ProfileImage moved to Components/ProfileImage.swift
+
+// BottomSheetViews moved to Components/BottomSheetViews.swift
+
+// MARK: - Route Overlay View (Uber-style)
+struct RouteOverlayView: View {
+    let route: RouteInfo
+    let onClose: () -> Void
+    let onBookRide: () -> Void
     
     var body: some View {
-        Group {
-            if let url = url, let imageURL = URL(string: url) {
-                AsyncImage(url: imageURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    CustomLoadingView()
-                        .scaleEffect(0.3)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color(.systemGray6))
-                }
-            } else {
-                ProfileInitials(displayName: displayName)
-            }
-        }
-        .frame(width: size, height: size)
-        .clipShape(Circle())
-    }
-}
-
-// MARK: - Profile Initials Fallback
-struct ProfileInitials: View {
-    let displayName: String
-    
-    var body: some View {
-        Circle()
-            .fill(Color("Accent").opacity(0.3))
-            .overlay(
-                Text(displayName.prefix(1).uppercased())
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(
-                           .linearGradient(
-                               colors: [.blue, .white],
-                               startPoint: .top,
-                               endPoint: .trailing
-                           )
-                       )
-            )
-    }
-}
-
-// MARK: - Bottom Sheet View - Optimized
-struct BottomSheetViews: View {
-    @Binding var sheetDetent: PresentationDetent
-    @EnvironmentObject var authModel: AuthModel
-    @State private var searchTerm: String = ""
-    @State private var fromLocation: String = ""
-    @State private var toLocation: String = ""
-    @State private var isSearchActive: Bool = false
-    
-    // Add binding to control profile navigation from parent
-    @Binding var navigationPath: NavigationPath
-    
-    var body: some View {
-        // Extract content into separate views to reduce complexity
-        contentView
-    }
-    
-    // Main content view based on state
-    private var contentView: some View {
-        VStack(spacing: 15) {
-            if sheetDetent == .height(80) {
-                collapsedView
-            } else if isSearchActive {
-                searchView
-            } else {
-                expandedView
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-    
-    // Collapsed state view
-    private var collapsedView: some View {
-        HStack(spacing: 12) {
-            searchButton
-            profileButton
-        }
-        .padding(.horizontal, 20)
-        .frame(height: 80)
-        .frame(maxWidth: .infinity)
-        .frame(maxHeight: .infinity, alignment: .center)
-    }
-    
-    // Search button
-    private var searchButton: some View {
-        Button {
-            isSearchActive = true
-            if sheetDetent == .height(80) {
-                sheetDetent = .large
-            }
-        } label: {
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.black)
-                Text("Where to?")
-                    .foregroundColor(.black)
-                Spacer()
-            }
-            .padding()
-            .frame(height: 55)
-            .background(Color.gray.opacity(0.2))
-            .clipShape(Capsule())
-        }
-    }
-    
-    // Profile button
-    private var profileButton: some View {
-        Button {
-            print("🔵 Avatar button tapped in bottom sheet!")
-            print("🔵 Navigating to profile via NavigationStack")
-            navigationPath.append(NavigationDestination.profile)
-        } label: {
-            ProfileImage(
-                url: authModel.currentUser?.profilePicture,
-                displayName: authModel.currentUser?.displayName ?? "User",
-                size: 55
-            )
-        }
-    }
-    
-    // Search view
-    private var searchView: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                searchHeader
-                searchFields
-                recentSearches
-                Spacer(minLength: 100)
-            }
-            .padding(.horizontal, 20)
-        }
-    }
-    
-    // Search header
-    private var searchHeader: some View {
-        HStack {
-            Text("Plan Your Trip")
-                .font(.title3)
-                .fontWeight(.bold)
-                .foregroundColor(.black)
-            
-            Spacer()
-            
-            Button {
-                isSearchActive = false
-                if sheetDetent == .large {
-                    sheetDetent = .height(80)
-                }
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title3)
-                    .foregroundColor(.black)
-            }
-        }
-        .padding(.top, 16)
-    }
-    
-    // Search fields
-    private var searchFields: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 16) {
-                Image(systemName: "arrow.up.arrow.down")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                    .frame(width: 30)
-                
-                VStack(spacing: 20) {
-                    TextField("From", text: $fromLocation)
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .clipShape(Capsule())
-                    
-                    TextField("To", text: $toLocation)
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .clipShape(Capsule())
-                }
-            }
-            
-            Button {
-                // Implement search action
-            } label: {
-                Text("Search")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.black)
-                    .foregroundColor(.white)
-                    .clipShape(Capsule())
-            }
-        }
-        .padding(.top, 16)
-    }
-    
-    // Recent searches
-    private var recentSearches: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Recent Searches")
-                .font(.headline)
-                .foregroundColor(.black)
-                .padding(.top, 16)
-            
-            ForEach(["Dodoma to City Center", "Hotel Zone to Beach", "Sinza to Mall"], id: \.self) { search in
-                HStack {
-                    Image(systemName: "clock")
-                        .foregroundColor(.black)
-                    Text(search)
-                        .foregroundColor(.black)
-                    Spacer()
-                }
-                .padding()
-                .background(Color.gray.opacity(0.1))
-                .clipShape(Capsule())
-            }
-        }
-    }
-    
-    // Expanded state view
-    private var expandedView: some View {
-        ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                titleView
-                vehicleCategories
-                featuredRentalsSection
-                Spacer(minLength: 40)
-            }
-            .padding(.horizontal, 20)
-        }
-    }
-    
-    // Title view
-    private var titleView: some View {
-                    Text("Available Rentals")
-            .font(.title)
-                        .fontWeight(.bold)
-            .foregroundColor(.black)
-            .padding(.top, 8)
-            .padding(.bottom, 8)
-    }
-    
-    // Vehicle categories
-    private var vehicleCategories: some View {
-        VStack(spacing: 16) {
-            VehicleCategoryRow(
-                title: "Coasters",
-                description: "Compact and efficient city cars",
-                icon: "coaster"
-            )
-            
-            VehicleCategoryRow(
-                title: "SUVs",
-                description: "Spacious vehicles for any terrain",
-                icon: "suv"
-            )
-            
-            VehicleCategoryRow(
-                title: "Huge Vehicles",
-                description: "Large capacity for groups and cargo",
-                icon: "truck"
-            )
-        }
-    }
-    
-    // Featured rentals section
-    private var featuredRentalsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Featured Rentals")
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(.black)
+        VStack(spacing: 0) {
+            // Handle bar
+            RoundedRectangle(cornerRadius: 2.5)
+                .fill(Color.gray.opacity(0.4))
+                .frame(width: 40, height: 5)
                 .padding(.top, 8)
             
-                    LazyVStack(spacing: 12) {
-                        ForEach(rentalData, id: \.id) { rental in
-                            RentalCard(rental: rental)
-                        }
-            }
-        }
-    }
-    
-    // Static rental data to avoid recreating arrays
-    private let rentalData: [RentalData] = [
-        RentalData(id: 1, carName: "Tesla Model 3", price: "$89/day", distance: "0.2 mi"),
-        RentalData(id: 2, carName: "BMW X5", price: "$120/day", distance: "0.5 mi"),
-        RentalData(id: 3, carName: "Mercedes C-Class", price: "$95/day", distance: "0.8 mi")
-    ]
-}
-
-// MARK: - Vehicle Category Row
-struct VehicleCategoryRow: View {
-    let title: String
-    let description: String
-    let icon: String
-    
-    var body: some View {
-        Button(action: {
-            // Action to explore this category
-        }) {
-            HStack {
-                Image(icon)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 40, height: 40)
-                    .padding(.horizontal,20)
-                   
+            // Route information
+            VStack(spacing: 16) {
+                // Route header
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Route Preview")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        Text(route.summary)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                     
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundColor(.black)
+                    Spacer()
                     
-                    Text(description)
-                        .font(.caption)
-                        .foregroundColor(.black.opacity(0.7))
-                        .lineLimit(1)
+                    Button(action: onClose) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.gray)
+                    }
                 }
                 
-                Spacer()
+                // From and To locations
+                VStack(spacing: 12) {
+                    LocationRow(
+                        icon: "circle.fill",
+                        iconColor: .green,
+                        title: "From",
+                        location: route.fromLocation.name,
+                        subtitle: route.fromLocation.address
+                    )
+                    
+                    // Dotted line
+                    VStack {
+                        ForEach(0..<3, id: \.self) { _ in
+                            Circle()
+                                .fill(Color.gray.opacity(0.5))
+                                .frame(width: 4, height: 4)
+                        }
+                    }
+                    
+                    LocationRow(
+                        icon: "circle.fill",
+                        iconColor: .red,
+                        title: "To",
+                        location: route.toLocation.name,
+                        subtitle: route.toLocation.address
+                    )
+                }
+                .padding(.vertical, 8)
                 
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.black)
+                // Route details
+                HStack(spacing: 20) {
+                    RouteDetailItem(
+                        icon: "location.fill",
+                        title: "Distance",
+                        value: route.distance
+                    )
+                    
+                    RouteDetailItem(
+                        icon: "clock.fill",
+                        title: "Duration",
+                        value: route.duration
+                    )
+                    
+                    RouteDetailItem(
+                        icon: "dollarsign.circle.fill",
+                        title: "Cost",
+                        value: route.estimatedCost
+                    )
+                }
+                .padding(.horizontal)
+                
+                // Book ride button
+                Button(action: onBookRide) {
+                    Text("Book This Ride")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.black)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.top, 8)
             }
-            .padding()
-            .padding(.leading,10)
-            .background(Color.gray.opacity(0.1))
-            .clipShape(Capsule())
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
         }
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.ultraThinMaterial)
+        )
+        .padding(.horizontal, 20)
     }
 }
 
-// MARK: - Rental Data Model
-struct RentalData {
-    let id: Int
-    let carName: String
-    let price: String
-    let distance: String
-}
-
-
-
-// MARK: - Optimized Rental Card
-struct RentalCard: View {
-    let rental: RentalData
+// MARK: - Location Row
+struct LocationRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let location: String
+    let subtitle: String
     
     var body: some View {
-        HStack {
-            // Simplified car placeholder
-            RoundedRectangle(cornerRadius: 8)
-                .fill(.gray.opacity(0.3))
-                .frame(width: 60, height: 40)
-                .overlay(
-                    Image(systemName: "car.fill")
-                        .foregroundColor(.black)
-                        .font(.system(size: 16))
-                )
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(iconColor)
+                .frame(width: 20, height: 20)
             
-            VStack(alignment: .leading, spacing: 4) {
-                Text(rental.carName)
-                    .font(.headline)
-                    .foregroundColor(.black)
-                
-                Text(rental.distance)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
                     .font(.caption)
-                    .foregroundColor(.black.opacity(0.7))
+                    .foregroundColor(.secondary)
+                    .textCase(.uppercase)
+                
+                Text(location)
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
             }
             
             Spacer()
-            
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(rental.price)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.black)
-                
-                Button("Rent") {
-                    // Rent action
-                }
-                .font(.caption)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 4)
-                .background(Color.black)
-                .foregroundColor(.white)
-                .clipShape(Capsule())
-            }
         }
-        .padding()
-        .background(Color.gray.opacity(0.1))
-        .clipShape(Capsule())
+    }
+}
+
+// MARK: - Route Detail Item
+struct RouteDetailItem: View {
+    let icon: String
+    let title: String
+    let value: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(Color("Secondary"))
+            
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .textCase(.uppercase)
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
 
 
 #Preview {
-    SearchView()
-        .environmentObject(AuthModel())
+    // Use a mock AuthModel for previews to avoid network calls
+    let mockAuthModel = AuthModel()
+    mockAuthModel.isPreview = true
+    
+    return SearchView()
+        .environmentObject(mockAuthModel)
 }
-
-
 
 

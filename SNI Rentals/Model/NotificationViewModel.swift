@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import FirebaseFirestore
 
+@MainActor
 class NotificationViewModel: ObservableObject {
     @Published var notifications: [Notification] = []
     @Published var unreadCount: Int = 0
@@ -10,14 +11,37 @@ class NotificationViewModel: ObservableObject {
     
     var authModel: AuthModel?
     
-    private let notificationService = NotificationService()
+    private let notificationService: NotificationService?
     private var cancellables = Set<AnyCancellable>()
+    
+    // Flag to indicate if this instance is being used in a preview
+    var isPreview: Bool = false
+    
+    init(notificationService: NotificationService? = nil) {
+        // Check if running in preview mode
+        let isPreviewMode = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+        
+        if isPreviewMode {
+            self.isPreview = true
+            self.notificationService = nil
+            setupMockData()
+        } else {
+            self.notificationService = notificationService ?? NotificationService()
+        }
+    }
     private var notificationListener: AnyCancellable?
     
     // MARK: - Public Methods
     
     /// Load notifications for a user
-    func loadNotifications(for userId: String) {
+    @MainActor func loadNotifications(for userId: String) {
+        // Skip network calls in preview mode
+        if isPreview {
+            return
+        }
+        
+        guard let notificationService = notificationService else { return }
+        
         isLoading = true
         errorMessage = nil
         
@@ -46,16 +70,18 @@ class NotificationViewModel: ObservableObject {
     }
     
     private func loadNotificationsFromFirebase(for userId: String) {
+        guard let notificationService = notificationService else { return }
+        
         notificationService.fetchNotifications(for: userId)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { [weak self] completion in
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<Error>) in
                     self?.isLoading = false
                     if case .failure(let error) = completion {
                         self?.errorMessage = error.localizedDescription
                     }
                 },
-                receiveValue: { [weak self] notifications in
+                receiveValue: { [weak self] (notifications: [Notification]) in
                     self?.notifications = notifications
                     self?.updateUnreadCount()
                 }
@@ -65,17 +91,24 @@ class NotificationViewModel: ObservableObject {
     
     /// Start listening for new notifications
     func startNotificationListener(for userId: String) {
+        // Skip network calls in preview mode
+        if isPreview {
+            return
+        }
+        
+        guard let notificationService = notificationService else { return }
+        
         stopNotificationListener()
         
-        notificationListener = notificationService.listenForNotifications(for: userId)
+        notificationListener = notificationService.listenForNotificationsFromFirebase(for: userId)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { [weak self] completion in
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<Error>) in
                     if case .failure(let error) = completion {
                         self?.errorMessage = error.localizedDescription
                     }
                 },
-                receiveValue: { [weak self] newNotifications in
+                receiveValue: { [weak self] (newNotifications: [Notification]) in
                     // Only add notifications that don't already exist in our list
                     let existingIds = Set((self?.notifications ?? []).map { $0.id })
                     let uniqueNewNotifications = newNotifications.filter { !existingIds.contains($0.id) }
@@ -95,11 +128,17 @@ class NotificationViewModel: ObservableObject {
     }
     
     /// Mark a notification as read
-    func markAsRead(notificationId: String) {
+    @MainActor func markAsRead(notificationId: String) {
+        // Skip network calls in preview mode
+        if isPreview {
+            return
+        }
+        
+        guard let notificationService = notificationService else { return }
         guard let index = notifications.firstIndex(where: { $0.id == notificationId }) else { return }
         
         // Optimistically update the UI
-        var updatedNotification = notifications[index]
+        let updatedNotification = notifications[index]
         if !updatedNotification.isRead {
             // Create a new notification with isRead set to true
             let newNotification = Notification(
@@ -123,7 +162,7 @@ class NotificationViewModel: ObservableObject {
                 notificationService.markNotificationsReadOnAPI(token: token, notificationIds: [notificationId])
                     .receive(on: DispatchQueue.main)
                     .sink(
-                        receiveCompletion: { [weak self] completion in
+                        receiveCompletion: { [weak self] (completion: Subscribers.Completion<Error>) in
                             if case .failure(_) = completion {
                                 // Fallback to Firebase
                                 self?.markAsReadInFirebase([notificationId], originalNotification: updatedNotification, index: index)
@@ -140,10 +179,10 @@ class NotificationViewModel: ObservableObject {
     }
     
     private func markAsReadInFirebase(_ notificationIds: [String], originalNotification: Notification, index: Int) {
-        notificationService.markAsRead(notificationIds: notificationIds)
+        notificationService?.markAsRead(notificationIds: notificationIds)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { [weak self] completion in
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<Error>) in
                     if case .failure(let error) = completion {
                         // Revert the optimistic update on error
                         self?.notifications[index] = originalNotification
@@ -158,6 +197,13 @@ class NotificationViewModel: ObservableObject {
     
     /// Mark all notifications as read
     func markAllAsRead(for userId: String) {
+        // Skip network calls in preview mode
+        if isPreview {
+            return
+        }
+        
+        guard let notificationService = notificationService else { return }
+        
         let unreadIds = notifications
             .filter { !$0.isRead && $0.userId == userId }
             .map { $0.id }
@@ -190,11 +236,13 @@ class NotificationViewModel: ObservableObject {
         notificationService.markAsRead(notificationIds: unreadIds)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { [weak self] completion in
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<Error>) in
                     if case .failure(let error) = completion {
                         self?.errorMessage = error.localizedDescription
                         // We should reload notifications to get the correct state
-                        self?.loadNotifications(for: userId)
+                        Task { @MainActor in
+                            self?.loadNotifications(for: userId)
+                        }
                     }
                 },
                 receiveValue: { _ in }
@@ -204,15 +252,22 @@ class NotificationViewModel: ObservableObject {
     
     /// Refresh unread count
     func refreshUnreadCount(for userId: String) {
+        // Skip network calls in preview mode
+        if isPreview {
+            return
+        }
+        
+        guard let notificationService = notificationService else { return }
+        
         notificationService.getUnreadCount(for: userId)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { [weak self] completion in
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<Error>) in
                     if case .failure(let error) = completion {
                         self?.errorMessage = error.localizedDescription
                     }
                 },
-                receiveValue: { [weak self] count in
+                receiveValue: { [weak self] (count: Int) in
                     self?.unreadCount = count
                 }
             )
@@ -221,12 +276,45 @@ class NotificationViewModel: ObservableObject {
     
     // MARK: - Private Methods
     
+    private func setupMockData() {
+        // Mock notifications for preview
+        notifications = [
+            Notification(
+                id: "1",
+                userId: "preview-user",
+                title: "Welcome!",
+                body: "Welcome to the app",
+                type: .system,
+                relatedEntityId: nil,
+                isRead: false,
+                createdAt: Date(),
+                imageUrl: nil,
+                actionUrl: nil
+            ),
+            Notification(
+                id: "2",
+                userId: "preview-user",
+                title: "New Message",
+                body: "You have a new message",
+                type: .chat,
+                relatedEntityId: nil,
+                isRead: true,
+                createdAt: Date().addingTimeInterval(-3600),
+                imageUrl: nil,
+                actionUrl: nil
+            )
+        ]
+        updateUnreadCount()
+    }
+    
     private func updateUnreadCount() {
         unreadCount = notifications.filter { !$0.isRead }.count
     }
     
     deinit {
-        stopNotificationListener()
+        Task { @MainActor in
+            stopNotificationListener()
+        }
         cancellables.removeAll()
     }
-} 
+}

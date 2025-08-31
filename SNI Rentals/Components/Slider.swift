@@ -4,15 +4,20 @@
 //
 //  Created by Ajmal Leonard on 10/08/2025.
 //
-
+import Foundation
 import SwiftUI
 
-struct Slider: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
+
+struct ImageModel: Identifiable {
+    var id: UUID = .init()
+    var image: String
+    var name: String
+    var type: String
+    
 }
 
-#Preview {
-    Slider()
-}
+let intrp:[ImageModel] = [
+    .init(image: "", name: "", type: "")
+    
+]
+                                                                                                                      

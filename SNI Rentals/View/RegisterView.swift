@@ -173,7 +173,7 @@ struct RegisterView: View {
                     
                     VStack(spacing: 12) {
                         Button {
-                            // TODO: Apple Sign In
+                            signInWithApple()
                         } label: {
                             HStack {
                                 Image(systemName: "apple.logo")
@@ -276,6 +276,10 @@ struct RegisterView: View {
     
     private func signInWithGoogle() {
         authModel.signInWithGoogle()
+    }
+    
+    private func signInWithApple() {
+        authModel.signInWithApple()
     }
     
     private func isValidEmail(_ email: String) -> Bool {

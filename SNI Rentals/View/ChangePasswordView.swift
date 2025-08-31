@@ -118,7 +118,7 @@ struct ChangePasswordView: View {
                 .padding(.horizontal, 32)
             }
         }
-        .onChange(of: authModel.successMessage) { newValue in
+        .onChange(of: authModel.successMessage) { _, newValue in
             if newValue != nil {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
@@ -156,4 +156,4 @@ struct ChangePasswordView: View {
 
 #Preview {
     ChangePasswordView()
-} 
+}

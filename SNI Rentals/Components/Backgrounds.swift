@@ -26,9 +26,7 @@ struct OptimizedBackground: View {
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
-            
-            // Subtle animated overlay
-            AnimatedOverlay(animationOffset: $animationOffset, isDarkMode: isDarkMode)
+           
         }
         .onAppear {
             startSubtleAnimation()

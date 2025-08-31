@@ -99,7 +99,7 @@ struct AuthChoiceView: View {
                             // Social Login Buttons
                             VStack(spacing: 12) {
                                 Button {
-                                    // TODO: Implement Apple Sign In
+                                    authModel.signInWithApple()
                                 } label: {
                                     HStack {
                                         Image(systemName: "apple.logo")
@@ -116,7 +116,7 @@ struct AuthChoiceView: View {
                                 .disabled(authModel.isLoading)
                                 
                                 Button {
-                                    signInWithGoogle()
+                                    authModel.signInWithGoogle()
                                 } label: {
                                     HStack {
                                         Image("google")
@@ -190,12 +190,10 @@ struct AuthChoiceView: View {
         }
     }
     
-    private func signInWithGoogle() {
-        authModel.signInWithGoogle()
-    }
+
 }
 
 #Preview {
     AuthChoiceView()
         .environmentObject(AuthModel())
-} 
+}

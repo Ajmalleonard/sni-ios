@@ -1,66 +1,26 @@
 import SwiftUI
 
-// MARK: - Header ---------------------------------------------------------------
-
 struct HeaderView: View {
     @EnvironmentObject var authModel: AuthModel
     @State private var showLocationPicker = false
     
-    private let headerHeight: CGFloat = 300
+    // Reduce header height for more compact design
+    private let headerHeight: CGFloat = 50
     
     var body: some View {
         ZStack(alignment: .top) {
-            // Background gradient that extends into safe area
-          
             // Content container with proper safe area handling
             VStack(spacing: 0) {
-                // Safe area spacer
-              
-                // Main content
+                // Main content with reduced spacing
                 VStack(spacing: 0) {
-                    Spacer(minLength: 10)
                     topBar
-                    bodySection
-                    
-                    // Search Section
-                    NavigationLink(destination: SearchView()) {
-                        HStack {
-                            Text("Search Ride...")
-                                .fontWeight(.medium)
-                                .foregroundColor(.white)
-                            Spacer()
-                            Image("maper").resizable()
-                                .renderingMode(.template)
-                                .frame(width:25,height: 25)
-                                .foregroundColor(.white)
-                        }
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 20)
-                        // 1️⃣ glass background
-                        .background(
-                            .ultraThinMaterial,                // forces a live blur
-                            in: RoundedRectangle(cornerRadius: 50,
-                                                 style: .continuous)
-                        )
-                        // 2️⃣ subtle white‑ish stroke for the frosted edge
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 50, style: .continuous)
-                                .strokeBorder(.white.opacity(0.15), lineWidth: 2)
-                        )
-                        // 3️⃣ keep the blur inside the shape
-                        .compositingGroup()
-                        .foregroundColor(.primary)
-                    }
-
-                    .padding(.horizontal, 20)
-                   
                 }
                 .padding(.top, 8)
             }
         }
         .frame(height: headerHeight)
         .clipShape(
-            RoundedCorners(radius: 50, corners: [.bottomLeft, .bottomRight])
+            RoundedCorners(radius: 40, corners: [.bottomLeft, .bottomRight])
         )
     }
 }
@@ -111,18 +71,15 @@ private extension HeaderView {
     
     var topBar: some View {
         HStack(alignment: .center, spacing: 6) {
-            Button {
-                // Menu action
-            } label: {
-                Text("Welcome back! ").foregroundColor(.white.opacity(0.6))
-            }
+            Text("Welcome back!")
+                .font(.footnote)
+                .foregroundColor(.white.opacity(0.6))
             
             Spacer()
           
-            
-            Button{
-                
-            }label: {
+            Button {
+                // Profile action
+            } label: {
                 ProfileAvatar(
                     urlString: authModel.currentUser?.profilePicture,
                     placeholder: authModel.currentUser?.displayName
@@ -130,19 +87,19 @@ private extension HeaderView {
             }
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)
     }
     
     var bodySection: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Hello, \(authModel.currentUser?.name ?? "Guest")")
-                .font(.title)
+                .font(.title2)
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
         }
-        .frame(maxWidth: .infinity,alignment: .leading)
-        .padding()
-        
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 4)
     }
 }
 
@@ -213,22 +170,20 @@ struct ProfileAvatar: View {
             Image("user")
                 .resizable()
                 .renderingMode(.template)
-                .frame(width: 40, height: 40)
+                .frame(width: 30, height: 30)
                 
         }
-        .frame(width: 60, height: 60)
+        .frame(width: 45, height: 45)
         .clipShape(Circle())
         .background(
-            .ultraThinMaterial,                // forces a live blur
+            .ultraThinMaterial,
             in: RoundedRectangle(cornerRadius: 50,
                                  style: .continuous)
         )
-        // 2️⃣ subtle white‑ish stroke for the frosted edge
         .overlay(
             RoundedRectangle(cornerRadius: 50, style: .continuous)
                 .strokeBorder(.white.opacity(0.15), lineWidth: 1)
         )
-        // 3️⃣ keep the blur inside the shape
         .compositingGroup()
         .foregroundColor(.white)
     }
@@ -251,7 +206,7 @@ struct RoundedCorners: Shape {
 }
 
 // MARK: - Minimal Auth Model for Preview --------------------------------------
-// MARK: Dark‑green mesh background  (iOS 17+)
+// MARK: Dark‑green mesh background  (iOS 17+)
 @available(iOS 18.0, *)
 var backgroundGradient: some View {
     MeshGradient(
@@ -266,7 +221,7 @@ var backgroundGradient: some View {
             [0.0, 1.0],   [0.5, 1.0],   [1.0, 1.0]
         ],
         colors: [
-            // row‑0 colours ↴  (rich green “glow” across the top)
+            // row‑0 colours ↴  (rich green "glow" across the top)
             Color(red: 0.20, green: 0.45, blue: 0.30),   // forest green
             Color(red: 0.32, green: 0.60, blue: 0.40),   // bright emerald
             Color(red: 0.18, green: 0.40, blue: 0.28),   // deep jade

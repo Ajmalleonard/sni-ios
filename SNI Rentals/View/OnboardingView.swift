@@ -91,10 +91,9 @@ struct OnboardingView: View {
                                 }
                                 .fontWeight(.semibold)
                                 .padding()
-                                .background(Color("Secondary").opacity(0))
                                 .foregroundColor(Color("Secondary"))
                                 .clipShape(Capsule())
-                                .background(.ultraThinMaterial, in: .capsule)
+                                .background(.black)
                             } else {
                                 Button("Get Started") {
                                     onOnboardingComplete()
@@ -111,15 +110,33 @@ struct OnboardingView: View {
                         .padding(.bottom, 50)
                     }
                 }
-                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                .animation(.easeInOut, value: currentPage)
                 
-                // Bottom Buttons
-                VStack(spacing: 16) {
-                    if currentPage == pages.count - 1 {
-                        // Get Started Button
-                        Button(action: onOnboardingComplete) {
-                            Text("Get Started")
+                // Bottom Buttons - Only show for iOS 17.0+ (iOS 16 has manual navigation)
+                if #available(iOS 17.0, *) {
+                    VStack(spacing: 16) {
+                        if currentPage == pages.count - 1 {
+                            // Get Started Button
+                            Button(action: onOnboardingComplete) {
+                                Text("Get Started")
+                                    .fontWeight(.semibold)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .padding(.vertical,10)
+                                    .background(Color("Secondary").opacity(0))
+                                    .foregroundColor(Color("Secondary"))
+                                    .clipShape(Capsule())
+                                    .background(.ultraThinMaterial, in: .capsule)
+                            }
+                        } else {
+                            // Next Button
+                            Button{
+                                withAnimation(){
+                                    currentPage += 1
+                                }
+                            } label: {
+                                HStack {
+                                    Text("Next")
+                                }
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
@@ -128,39 +145,14 @@ struct OnboardingView: View {
                                 .foregroundColor(Color("Secondary"))
                                 .clipShape(Capsule())
                                 .background(.ultraThinMaterial, in: .capsule)
-                        }
-                     
-                        // Page Indicator
-                       
-                    } else {
-                        // Next and Skip Buttons
-                        Button{
-                            withAnimation(){
-                                currentPage += 1
                             }
-                            
-                        }label: {
-                    
-                        HStack {
-                         
-                            Text("Next")
-                             
-                            }
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .padding(.vertical,10)
-                            .background(Color("Secondary").opacity(0))
-                            .foregroundColor(Color("Secondary"))
-                            .clipShape(Capsule())
-                            .background(.ultraThinMaterial, in: .capsule)
                         }
-                       
                     }
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 50)
                 }
-                .padding(.horizontal, 32)
-                .padding(.bottom, 50)
             }
+            // Page Indicator
             HStack {
                 ForEach(0..<pages.count, id: \.self) { index in
                     Circle()
@@ -200,27 +192,24 @@ struct OnboardingStaticBackground: View {
     }
     
     var body: some View {
-        LinearGradient(
-            gradient: Gradient(colors: isDarkMode ? darkModeColors : lightModeColors),
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
+        Color(.white
         )
         .ignoresSafeArea()
     }
     
     private var lightModeColors: [Color] {
         [
-            Color("Primary").opacity(0.8),
-            Color("Secondary").opacity(0.6),
-            Color("Primary").opacity(0.9)
+            .white,
+            .white,
+            .white
         ]
     }
     
     private var darkModeColors: [Color] {
         [
-            Color("Primary").opacity(0.95),
-            Color("Secondary").opacity(0.4),
-            Color("Primary").opacity(1.0)
+            .white,
+            .white,
+            .white
         ]
     }
 }

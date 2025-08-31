@@ -9,13 +9,13 @@
 /* Begin PBXBuildFile section */
 		A15BC7872E22301600318CCE /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7862E22301600318CCE /* FirebaseAuth */; };
 		A15BC7892E22301600318CCE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7882E22301600318CCE /* FirebaseCore */; };
-		A15BC78B2E22301600318CCE /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC78A2E22301600318CCE /* FirebaseDatabase */; };
-		A15BC78D2E22301600318CCE /* FirebaseInAppMessaging-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC78C2E22301600318CCE /* FirebaseInAppMessaging-Beta */; };
-		A15BC78F2E22301600318CCE /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC78E2E22301600318CCE /* FirebaseMessaging */; };
-		A15BC7912E22301600318CCE /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7902E22301600318CCE /* FirebaseStorage */; };
 		A15BC7942E224DFF00318CCE /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7932E224DFF00318CCE /* GoogleSignIn */; };
 		A15BC7962E224DFF00318CCE /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7952E224DFF00318CCE /* GoogleSignInSwift */; };
 		A1781FBA2E26DDF2005140F1 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A1781FB92E26DDF2005140F1 /* FirebaseFirestore */; };
+		A18D7F1E2E6345D4007F3BCA /* GooglePlaces in Frameworks */ = {isa = PBXBuildFile; productRef = A18D7F1D2E6345D4007F3BCA /* GooglePlaces */; };
+		A18D7F202E6345D4007F3BCA /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A18D7F1F2E6345D4007F3BCA /* GooglePlacesSwift */; };
+		A18D7F232E634984007F3BCA /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = A18D7F222E634984007F3BCA /* GoogleMaps */; };
+		A1F9A4EE2E4BBB9C0054F4F9 /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = A1F9A4ED2E4BBB9C0054F4F9 /* SocketIO */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,14 +35,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A15BC78B2E22301600318CCE /* FirebaseDatabase in Frameworks */,
 				A15BC7892E22301600318CCE /* FirebaseCore in Frameworks */,
-				A15BC78F2E22301600318CCE /* FirebaseMessaging in Frameworks */,
+				A1F9A4EE2E4BBB9C0054F4F9 /* SocketIO in Frameworks */,
+				A18D7F1E2E6345D4007F3BCA /* GooglePlaces in Frameworks */,
+				A18D7F202E6345D4007F3BCA /* GooglePlacesSwift in Frameworks */,
 				A15BC7962E224DFF00318CCE /* GoogleSignInSwift in Frameworks */,
+				A18D7F232E634984007F3BCA /* GoogleMaps in Frameworks */,
 				A15BC7872E22301600318CCE /* FirebaseAuth in Frameworks */,
 				A1781FBA2E26DDF2005140F1 /* FirebaseFirestore in Frameworks */,
-				A15BC78D2E22301600318CCE /* FirebaseInAppMessaging-Beta in Frameworks */,
-				A15BC7912E22301600318CCE /* FirebaseStorage in Frameworks */,
 				A15BC7942E224DFF00318CCE /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -96,13 +96,13 @@
 			packageProductDependencies = (
 				A15BC7862E22301600318CCE /* FirebaseAuth */,
 				A15BC7882E22301600318CCE /* FirebaseCore */,
-				A15BC78A2E22301600318CCE /* FirebaseDatabase */,
-				A15BC78C2E22301600318CCE /* FirebaseInAppMessaging-Beta */,
-				A15BC78E2E22301600318CCE /* FirebaseMessaging */,
-				A15BC7902E22301600318CCE /* FirebaseStorage */,
 				A15BC7932E224DFF00318CCE /* GoogleSignIn */,
 				A15BC7952E224DFF00318CCE /* GoogleSignInSwift */,
 				A1781FB92E26DDF2005140F1 /* FirebaseFirestore */,
+				A1F9A4ED2E4BBB9C0054F4F9 /* SocketIO */,
+				A18D7F1D2E6345D4007F3BCA /* GooglePlaces */,
+				A18D7F1F2E6345D4007F3BCA /* GooglePlacesSwift */,
+				A18D7F222E634984007F3BCA /* GoogleMaps */,
 			);
 			productName = "SNI Rentals";
 			productReference = CEC880222E182B79009D61FD /* SNI Rentals.app */;
@@ -135,6 +135,9 @@
 			packageReferences = (
 				A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				A15BC7922E224DFF00318CCE /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				A1F9A4EC2E4BBB9C0054F4F9 /* XCRemoteSwiftPackageReference "socket.io-client-swift" */,
+				A18D7F1C2E6345D4007F3BCA /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
+				A18D7F212E634984007F3BCA /* XCRemoteSwiftPackageReference "ios-maps-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CEC880232E182B79009D61FD /* Products */;
@@ -220,7 +223,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -278,7 +281,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -293,6 +296,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "SNI Rentals/SNI Rentals.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -315,7 +319,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "snicolt.com.SNI-Rentals";
+				PRODUCT_BUNDLE_IDENTIFIER = com.sni.rentals;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -332,6 +336,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "SNI Rentals/SNI Rentals.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -354,7 +359,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "snicolt.com.SNI-Rentals";
+				PRODUCT_BUNDLE_IDENTIFIER = com.sni.rentals;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -406,6 +411,30 @@
 				minimumVersion = 9.0.0;
 			};
 		};
+		A18D7F1C2E6345D4007F3BCA /* XCRemoteSwiftPackageReference "ios-places-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-places-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.1.0;
+			};
+		};
+		A18D7F212E634984007F3BCA /* XCRemoteSwiftPackageReference "ios-maps-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-maps-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.2.0;
+			};
+		};
+		A1F9A4EC2E4BBB9C0054F4F9 /* XCRemoteSwiftPackageReference "socket.io-client-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 16.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -418,26 +447,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
-		};
-		A15BC78A2E22301600318CCE /* FirebaseDatabase */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseDatabase;
-		};
-		A15BC78C2E22301600318CCE /* FirebaseInAppMessaging-Beta */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = "FirebaseInAppMessaging-Beta";
-		};
-		A15BC78E2E22301600318CCE /* FirebaseMessaging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseMessaging;
-		};
-		A15BC7902E22301600318CCE /* FirebaseStorage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseStorage;
 		};
 		A15BC7932E224DFF00318CCE /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -453,6 +462,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A15BC7852E22301600318CCE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		A18D7F1D2E6345D4007F3BCA /* GooglePlaces */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A18D7F1C2E6345D4007F3BCA /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
+			productName = GooglePlaces;
+		};
+		A18D7F1F2E6345D4007F3BCA /* GooglePlacesSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A18D7F1C2E6345D4007F3BCA /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
+			productName = GooglePlacesSwift;
+		};
+		A18D7F222E634984007F3BCA /* GoogleMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A18D7F212E634984007F3BCA /* XCRemoteSwiftPackageReference "ios-maps-sdk" */;
+			productName = GoogleMaps;
+		};
+		A1F9A4ED2E4BBB9C0054F4F9 /* SocketIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1F9A4EC2E4BBB9C0054F4F9 /* XCRemoteSwiftPackageReference "socket.io-client-swift" */;
+			productName = SocketIO;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,10 +1,13 @@
 import Foundation
 import Combine
 import GoogleSignIn
+import AuthenticationServices
 import UIKit
 
 class AuthService {
     private let baseURL = "https://api.snicolt.com"
+    //private let baseURL = "http://localhost:1010"
+    private var appleSignInDelegate: AppleSignInDelegate?
     
     // MARK: - Login
     func login(email: String, password: String, completion: @escaping @Sendable (Result<LoginResponse, Error>) -> Void) {
@@ -19,14 +22,16 @@ class AuthService {
     
     // MARK: - Google Sign-In
     func signInWithGoogle(completion: @escaping @Sendable (Result<LoginResponse, Error>) -> Void) {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first,
-              let presentingViewController = window.rootViewController else {
-            completion(.failure(AuthError.googleSignInError("Could not find presenting view controller")))
-            return
-        }
-        
-        GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { [weak self] result, error in
+        // Ensure UI operations happen on main thread
+        DispatchQueue.main.async {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = windowScene.windows.first,
+                  let presentingViewController = window.rootViewController else {
+                completion(.failure(AuthError.googleSignInError("Could not find presenting view controller")))
+                return
+            }
+            
+            GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { [weak self] result, error in
             if let error = error {
                 completion(.failure(AuthError.googleSignInError(error.localizedDescription)))
                 return
@@ -43,14 +48,72 @@ class AuthService {
             let name = user.profile?.name ?? ""
             let profilePicture = user.profile?.imageURL(withDimension: 200)?.absoluteString
             
-            self?.authenticateWithGoogle(
+                self?.authenticateWithGoogle(
+                    idToken: idToken,
+                    accessToken: accessToken,
+                    email: email,
+                    name: name,
+                    profilePicture: profilePicture,
+                    completion: completion
+                )
+            }
+        }
+    }
+    
+    func signInWithGoogle() async throws -> LoginResponse {
+        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let presentingViewController = windowScene.windows.first?.rootViewController else {
+            throw AuthError.googleSignInError("No presenting view controller found")
+        }
+        
+        do {
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
+            let user = result.user
+             
+            guard let idToken = user.idToken?.tokenString else {
+                throw AuthError.googleSignInError("Failed to get ID token")
+            }
+            
+            let accessToken = user.accessToken.tokenString
+            let email = user.profile?.email ?? ""
+            let name = user.profile?.name ?? ""
+            let profilePicture = user.profile?.imageURL(withDimension: 200)?.absoluteString
+            
+            return try await authenticateWithGoogle(
                 idToken: idToken,
                 accessToken: accessToken,
                 email: email,
                 name: name,
-                profilePicture: profilePicture,
-                completion: completion
+                profilePicture: profilePicture
             )
+        } catch {
+            throw AuthError.googleSignInError(error.localizedDescription)
+        }
+    }
+    
+    func signInWithApple() async throws -> LoginResponse {
+        return try await withCheckedThrowingContinuation { continuation in
+            let request = ASAuthorizationAppleIDProvider().createRequest()
+            request.requestedScopes = [.fullName, .email]
+            
+            let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+            
+            // Store delegate as property to prevent deallocation
+            Task { @MainActor in
+                self.appleSignInDelegate = AppleSignInDelegate { [weak self] result in
+                    defer { self?.appleSignInDelegate = nil } // Clean up after completion
+                    switch result {
+                    case .success(let loginResponse):
+                        continuation.resume(returning: loginResponse)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+                
+                authorizationController.delegate = self.appleSignInDelegate
+                authorizationController.presentationContextProvider = self.appleSignInDelegate
+                authorizationController.performRequests()
+            }
         }
     }
     
@@ -76,6 +139,116 @@ class AuthService {
         )
         
         performRequest(url: url, method: "POST", body: request, completion: completion)
+    }
+    
+    private func authenticateWithGoogle(
+        idToken: String,
+        accessToken: String,
+        email: String,
+        name: String,
+        profilePicture: String?
+    ) async throws -> LoginResponse {
+        let request = GoogleSignInRequest(
+            idToken: idToken,
+            accessToken: accessToken,
+            email: email,
+            name: name,
+            profilePicture: profilePicture
+        )
+        
+        guard let url = URL(string: baseURL + "/auth/google") else {
+            throw AuthError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            urlRequest.httpBody = try JSONEncoder().encode(request)
+        } catch {
+            throw AuthError.networkError(error)
+        }
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: urlRequest)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw AuthError.unexpectedResponse
+            }
+            
+            if httpResponse.statusCode == 200 {
+                let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
+                return loginResponse
+            } else {
+                if let errorData = try? JSONDecoder().decode(BackendError.self, from: data) {
+                    throw AuthError.backend(errorData.message)
+                } else {
+                    throw AuthError.invalidResponse
+                }
+            }
+        } catch {
+            if error is AuthError {
+                throw error
+            } else {
+                throw AuthError.networkError(error)
+            }
+        }
+    }
+    
+    func authenticateWithApple(
+        identityToken: String,
+        authorizationCode: String,
+        email: String?,
+        fullName: PersonNameComponents?,
+        userIdentifier: String
+    ) async throws -> LoginResponse {
+        let request = AppleSignInRequest(
+            identityToken: identityToken,
+            authorizationCode: authorizationCode,
+            email: email,
+            fullName: fullName,
+            userIdentifier: userIdentifier
+        )
+        
+        guard let url = URL(string: baseURL + "/auth/apple") else {
+            throw AuthError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            urlRequest.httpBody = try JSONEncoder().encode(request)
+        } catch {
+            throw AuthError.networkError(error)
+        }
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: urlRequest)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw AuthError.unexpectedResponse
+            }
+            
+            if httpResponse.statusCode == 200 {
+                let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
+                return loginResponse
+            } else {
+                if let errorData = try? JSONDecoder().decode(BackendError.self, from: data) {
+                    throw AuthError.backend(errorData.message)
+                } else {
+                    throw AuthError.invalidResponse
+                }
+            }
+        } catch {
+            if error is AuthError {
+                throw error
+            } else {
+                throw AuthError.networkError(error)
+            }
+        }
     }
     
     // MARK: - Email Verification
@@ -337,5 +510,73 @@ class AuthService {
             print("   \(response)")
         }
         print(String(repeating: "=", count: 60) + "\n")
+    }
+}
+
+// MARK: - Apple Sign-In Delegate
+@MainActor
+class AppleSignInDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding, @unchecked Sendable {
+    private let completion: (Result<LoginResponse, Error>) -> Void
+    
+    init(completion: @escaping (Result<LoginResponse, Error>) -> Void) {
+        self.completion = completion
+        super.init()
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        print("🍎 Apple Sign-In: Authorization completed")
+        
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            print("❌ Apple Sign-In: Invalid credential type")
+            completion(.failure(AuthError.appleSignInError("Invalid credential type")))
+            return
+        }
+        
+        guard let identityTokenData = appleIDCredential.identityToken,
+              let identityToken = String(data: identityTokenData, encoding: .utf8),
+              let authorizationCodeData = appleIDCredential.authorizationCode,
+              let authorizationCode = String(data: authorizationCodeData, encoding: .utf8) else {
+            print("❌ Apple Sign-In: Failed to get identity token or authorization code")
+            completion(.failure(AuthError.appleSignInError("Failed to get identity token or authorization code")))
+            return
+        }
+        
+        let email = appleIDCredential.email
+        let fullName = appleIDCredential.fullName
+        let userIdentifier = appleIDCredential.user
+        
+        print("🍎 Apple Sign-In: Got credentials - Email: \(email ?? "nil"), UserID: \(userIdentifier)")
+        
+        Task {
+            do {
+                print("🍎 Apple Sign-In: Starting backend authentication...")
+                let authService = AuthService()
+                let loginResponse = try await authService.authenticateWithApple(
+                    identityToken: identityToken,
+                    authorizationCode: authorizationCode,
+                    email: email,
+                    fullName: fullName,
+                    userIdentifier: userIdentifier
+                )
+                print("✅ Apple Sign-In: Backend authentication successful")
+                completion(.success(loginResponse))
+            } catch {
+                print("❌ Apple Sign-In: Backend authentication failed - \(error.localizedDescription)")
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        print("❌ Apple Sign-In: Authorization failed - \(error.localizedDescription)")
+        completion(.failure(AuthError.appleSignInError(error.localizedDescription)))
+    }
+    
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            return UIWindow()
+        }
+        return window
     }
 }

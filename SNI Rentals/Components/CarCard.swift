@@ -25,7 +25,7 @@ struct TrendingCarCard: View {
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
-                        RoundedRectangle(cornerRadius: 0)
+                        RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.systemGray6))
                             .overlay(
                                 Image(systemName: "car.fill")
@@ -33,8 +33,8 @@ struct TrendingCarCard: View {
                                     .foregroundColor(.secondary)
                             )
                     }
-                    .frame(width: 140, height: 120)
-                    .clipped()
+                    .frame(width: 160, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                     
                     // Unlimited Miles Badge
                     if car.features.contains("Unlimited Miles") || true { // Default to true for demo
@@ -85,7 +85,7 @@ struct TrendingCarCard: View {
                             Image(systemName: "star.fill")
                                 .font(.caption)
                                 .foregroundColor(.orange)
-                            Text("5.0")
+                            Text(String(format: "%.1f", car.averageRating > 0 ? car.averageRating : 5.0))
                                 .font(.caption)
                                 .fontWeight(.medium)
                                 .foregroundColor(.primary)
@@ -107,7 +107,7 @@ struct TrendingCarCard: View {
                             Image(systemName: "calendar")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
-                            Text("91 Trips")
+                            Text("\(car.rentals?.count ?? 0) Trips")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -191,7 +191,7 @@ struct PopularCarCard: View {
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
-                        RoundedRectangle(cornerRadius: 0)
+                        RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.systemGray6))
                             .overlay(
                                 Image(systemName: "car.fill")
@@ -199,8 +199,8 @@ struct PopularCarCard: View {
                                     .foregroundColor(.secondary)
                             )
                     }
-                    .frame(width: 140, height: 120)
-                    .clipped()
+                    .frame(width: 160, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                     
                     // Unlimited Miles Badge
                     if car.features.contains("Unlimited Miles") || true { // Default to true for demo
@@ -251,7 +251,7 @@ struct PopularCarCard: View {
                             Image(systemName: "star.fill")
                                 .font(.caption)
                                 .foregroundColor(.orange)
-                            Text("5.0")
+                            Text(String(format: "%.1f", car.averageRating > 0 ? car.averageRating : 5.0))
                                 .font(.caption)
                                 .fontWeight(.medium)
                                 .foregroundColor(.primary)
@@ -264,6 +264,7 @@ struct PopularCarCard: View {
                             Image(systemName: "location.fill")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
+                                .clipShape(RoundedCorner(radius:20))
                             Text(car.location?.city ?? "San Francisco")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
@@ -273,7 +274,8 @@ struct PopularCarCard: View {
                             Image(systemName: "calendar")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
-                            Text("91 Trips")
+                              
+                            Text("\(car.rentals?.count ?? 0) Trips")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

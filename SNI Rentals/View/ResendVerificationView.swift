@@ -95,7 +95,7 @@ struct ResendVerificationView: View {
             }
         }
         .loadingOverlay(isLoading: authModel.isLoading)
-        .onChange(of: authModel.successMessage) { newValue in
+        .onChange(of: authModel.successMessage) { _, newValue in
             if newValue != nil {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
@@ -126,4 +126,4 @@ struct ResendVerificationView: View {
 
 #Preview {
     ResendVerificationView()
-} 
+}

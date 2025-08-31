@@ -6,100 +6,64 @@
 //
 
 import SwiftUI
-import SwiftData
-import FirebaseCore
-import FirebaseAuth
+import Firebase
 import GoogleSignIn
+import GoogleMaps
 
 @main
 struct SNI_RentalsApp: App {
+    @StateObject private var authModel = AuthModel()
+    @Environment(\.scenePhase) private var scenePhase
     
     init() {
-        // Configure Firebase
+        // Skip heavy initialization in preview mode
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            setupProductionServices()
+        }
+    }
+    
+    private func setupProductionServices() {
         FirebaseApp.configure()
         
-        // Configure Google Sign-In
         guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
               let plist = NSDictionary(contentsOfFile: path),
               let clientId = plist["CLIENT_ID"] as? String else {
-            fatalError("GoogleService-Info.plist file not found or CLIENT_ID missing")
+            fatalError("GoogleService-Info.plist file not found or CLIENT_ID not found")
         }
         
-        // GIDConfiguration initializer doesn't return optional, so no need for guard let
         let gidConfig = GIDConfiguration(clientID: clientId)
         GIDSignIn.sharedInstance.configuration = gidConfig
+        
+        // Configure Google Maps
+        GoogleMapsConfiguration.configure()
     }
     
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
-
     var body: some Scene {
         WindowGroup {
-            AppRootView()
+            ContentView()
+                .environmentObject(authModel)
+                .preferredColorScheme(.light)
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }
+                .onChange(of: scenePhase) { _, newPhase in
+                    handleScenePhaseChange(newPhase)
+                }
         }
-        .modelContainer(sharedModelContainer)
-    }
-}
-
-struct AppRootView: View {
-    @StateObject private var authModel = AuthModel()
-    @State private var showSplash = true
-    @State private var showOnboarding = false
-    @State private var showAuthChoice = false
-    
-    private var hasSeenOnboarding: Bool {
-        UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
     }
     
-    var body: some View {
-        Group {
-            if authModel.currentUser != nil {
-                // User is logged in - show main app
-                HomeView()
-                    .environmentObject(authModel)
-            } else if showSplash {
-                // Show splash screen
-                SplashScreen {
-                    showSplash = false
-                    if hasSeenOnboarding {
-                        showAuthChoice = true
-                    } else {
-                        showOnboarding = true
-                    }
-                }
-            } else if showOnboarding {
-                // Show onboarding for new users
-                OnboardingView {
-                    UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-                    showOnboarding = false
-                    showAuthChoice = true
-                }
-            } else if showAuthChoice {
-                // Show auth choice screen
-                AuthChoiceView(
-                    onRegisterTapped: {
-                        // Navigation handled within RegisterView
-                    },
-                    onLoginTapped: {
-                        // Navigation handled within LoginView
-                    }
-                )
-                .environmentObject(authModel)
-            }
+    private func handleScenePhaseChange(_ phase: ScenePhase) {
+        // This will be handled by individual chat managers
+        // but we can add global app state management here if needed
+        switch phase {
+        case .active:
+            print("📱 App became active")
+        case .inactive:
+            print("📱 App became inactive")
+        case .background:
+            print("📱 App went to background")
+        @unknown default:
+            break
         }
-        .animation(.easeInOut(duration: 0.2), value: authModel.currentUser?.id)
     }
 }

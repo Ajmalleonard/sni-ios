@@ -38,12 +38,16 @@ struct MessageState {
 }
 
 // MARK: - Optimized AuthModel
-class AuthModel: ObservableObject {
+@MainActor
+class AuthModel: ObservableObject, Sendable {
     // Combined state properties - reduces UI updates
     @Published var authState = AuthState()
     @Published var registrationState = RegistrationState()
     @Published var messageState = MessageState.none
     @Published var isLoading: Bool = false
+    
+    // Flag to indicate if this instance is being used in a preview
+    var isPreview: Bool = false
     
     private let authService = AuthService()
     private var cancellables = Set<AnyCancellable>()
@@ -64,19 +68,35 @@ class AuthModel: ObservableObject {
     }
     
     init() {
+        // Check if running in preview mode
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            self.isPreview = true
+            // Skip heavy setup in preview mode
+            return
+        }
+        
         setupMessageAutoClearing()
     }
     
     // MARK: - Authentication Methods
     func login(email: String, password: String) {
+        guard !isPreview else { return }
         performAuthOperation { [weak self] in
             await self?.handleLogin(email: email, password: password)
         }
     }
     
     func signInWithGoogle() {
+        guard !isPreview else { return }
         performAuthOperation { [weak self] in
             await self?.handleGoogleSignIn()
+        }
+    }
+    
+    func signInWithApple() {
+        guard !isPreview else { return }
+        performAuthOperation { [weak self] in
+            await self?.handleAppleSignIn()
         }
     }
     
@@ -119,19 +139,19 @@ class AuthModel: ObservableObject {
     // MARK: - Private Async Handlers
     private func handleLogin(email: String, password: String) async {
         await withCheckedContinuation { continuation in
-            authService.login(email: email, password: password) { [weak self] result in
-                DispatchQueue.main.async {
+            authService.login(email: email, password: password) { result in
+                Task { @MainActor in
                     switch result {
                     case .success(let response):
-                        self?.authState = AuthState(
+                        self.authState = AuthState(
                             currentUser: response.user,
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
                         )
-                        self?.messageState = MessageState.success("Login successful")
+                        self.messageState = MessageState.success("Login successful")
                         
                     case .failure(let error):
-                        self?.messageState = MessageState.error(self?.parseErrorMessage(error) ?? "Login failed")
+                        self.messageState = MessageState.error(self.parseErrorMessage(error))
                     }
                     continuation.resume()
                 }
@@ -141,19 +161,19 @@ class AuthModel: ObservableObject {
     
     private func handleGoogleSignIn() async {
         await withCheckedContinuation { continuation in
-            authService.signInWithGoogle { [weak self] result in
-                DispatchQueue.main.async {
+            authService.signInWithGoogle { result in
+                Task { @MainActor in
                     switch result {
                     case .success(let response):
-                        self?.authState = AuthState(
+                        self.authState = AuthState(
                             currentUser: response.user,
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
                         )
-                        self?.messageState = MessageState.success("Google Sign-In successful")
+                        self.messageState = MessageState.success("Google Sign-In successful")
                         
                     case .failure(let error):
-                        self?.messageState = MessageState.error(self?.parseErrorMessage(error) ?? "Google Sign-In failed")
+                        self.messageState = MessageState.error(self.parseErrorMessage(error))
                     }
                     continuation.resume()
                 }
@@ -161,21 +181,39 @@ class AuthModel: ObservableObject {
         }
     }
     
+    private func handleAppleSignIn() async {
+        do {
+            let response = try await authService.signInWithApple()
+            await MainActor.run {
+                self.authState = AuthState(
+                    currentUser: response.user,
+                    accessToken: response.accessToken,
+                    refreshToken: response.refreshToken
+                )
+                self.messageState = MessageState.success("Apple Sign-In successful")
+            }
+        } catch {
+            await MainActor.run {
+                self.messageState = MessageState.error(self.parseErrorMessage(error))
+            }
+        }
+    }
+    
     private func handleEmailVerification(email: String) async {
         await withCheckedContinuation { continuation in
-            authService.requestEmailVerification(email: email) { [weak self] result in
-                DispatchQueue.main.async {
+            authService.requestEmailVerification(email: email) { result in
+                Task { @MainActor in
                     switch result {
                     case .success:
-                        self?.registrationState = RegistrationState(
+                        self.registrationState = RegistrationState(
                             step: .enterCode,
                             verifiedEmail: email,
                             codeVerified: false
                         )
-                        self?.messageState = MessageState.success("Verification code sent to email")
+                        self.messageState = MessageState.success("Verification code sent to email")
                         
                     case .failure(let error):
-                        self?.messageState = MessageState.error(self?.parseErrorMessage(error) ?? "Email verification failed")
+                        self.messageState = MessageState.error(self.parseErrorMessage(error))
                     }
                     continuation.resume()
                 }
@@ -185,19 +223,19 @@ class AuthModel: ObservableObject {
     
     private func handleCodeVerification(email: String, code: String) async {
         await withCheckedContinuation { continuation in
-            authService.verifyEmailCode(email: email, code: code) { [weak self] result in
-                DispatchQueue.main.async {
+            authService.verifyEmailCode(email: email, code: code) { result in
+                Task { @MainActor in
                     switch result {
                     case .success:
-                        self?.registrationState = RegistrationState(
+                        self.registrationState = RegistrationState(
                             step: .enterDetails,
                             verifiedEmail: email,
                             codeVerified: true
                         )
-                        self?.messageState = MessageState.success("Email verified successfully")
+                        self.messageState = MessageState.success("Email verified successfully")
                         
                     case .failure(let error):
-                        self?.messageState = MessageState.error(self?.parseErrorMessage(error) ?? "Code verification failed")
+                        self.messageState = MessageState.error(self.parseErrorMessage(error))
                     }
                     continuation.resume()
                 }
@@ -207,20 +245,20 @@ class AuthModel: ObservableObject {
     
     private func handleRegistrationCompletion(email: String, password: String, name: String, phoneNumber: String?, role: UserRole) async {
         await withCheckedContinuation { continuation in
-            authService.completeRegistration(email: email, password: password, name: name, phoneNumber: phoneNumber, role: role) { [weak self] result in
-                DispatchQueue.main.async {
+            authService.completeRegistration(email: email, password: password, name: name, phoneNumber: phoneNumber, role: role) { result in
+                Task { @MainActor in
                     switch result {
                     case .success(let response):
-                        self?.authState = AuthState(
+                        self.authState = AuthState(
                             currentUser: response.user,
                             accessToken: response.accessToken,
                             refreshToken: response.refreshToken
                         )
-                        self?.registrationState = RegistrationState() // Reset registration state
-                        self?.messageState = MessageState.success("Registration completed successfully")
+                        self.registrationState = RegistrationState() // Reset registration state
+                        self.messageState = MessageState.success("Registration completed successfully")
                         
                     case .failure(let error):
-                        self?.messageState = MessageState.error(self?.parseErrorMessage(error) ?? "Registration failed")
+                        self.messageState = MessageState.error(self.parseErrorMessage(error))
                     }
                     continuation.resume()
                 }
@@ -230,15 +268,15 @@ class AuthModel: ObservableObject {
     
     private func handleProfileUpdate(name: String, phoneNumber: String?) async {
         await withCheckedContinuation { continuation in
-            authService.updateProfile(name: name, phoneNumber: phoneNumber) { [weak self] result in
-                DispatchQueue.main.async {
+            authService.updateProfile(name: name, phoneNumber: phoneNumber) { result in
+                Task { @MainActor in
                     switch result {
                     case .success(let updatedUser):
-                        self?.authState.currentUser = updatedUser
-                        self?.messageState = MessageState.success("Profile updated successfully")
+                        self.authState.currentUser = updatedUser
+                        self.messageState = MessageState.success("Profile updated successfully")
                         
                     case .failure(let error):
-                        self?.messageState = MessageState.error(self?.parseErrorMessage(error) ?? "Profile update failed")
+                        self.messageState = MessageState.error(self.parseErrorMessage(error))
                     }
                     continuation.resume()
                 }
@@ -248,14 +286,14 @@ class AuthModel: ObservableObject {
     
     private func handlePasswordChange(currentPassword: String, newPassword: String) async {
         await withCheckedContinuation { continuation in
-            authService.changePassword(currentPassword: currentPassword, newPassword: newPassword) { [weak self] result in
-                DispatchQueue.main.async {
+            authService.changePassword(currentPassword: currentPassword, newPassword: newPassword) { result in
+                Task { @MainActor in
                     switch result {
                     case .success:
-                        self?.messageState = MessageState.success("Password changed successfully")
+                        self.messageState = MessageState.success("Password changed successfully")
                         
                     case .failure(let error):
-                        self?.messageState = MessageState.error(self?.parseErrorMessage(error) ?? "Password change failed")
+                        self.messageState = MessageState.error(self.parseErrorMessage(error))
                     }
                     continuation.resume()
                 }
@@ -266,6 +304,12 @@ class AuthModel: ObservableObject {
     // MARK: - Private Helpers
     private func performAuthOperation(_ operation: @escaping () async -> Void) {
         guard !isLoading else { return } // Prevent multiple simultaneous operations
+        
+        // Skip actual network operations in preview mode
+        if isPreview {
+            print("[Preview] Skipping network operation in preview mode")
+            return
+        }
         
         messageState = MessageState.none
         isLoading = true

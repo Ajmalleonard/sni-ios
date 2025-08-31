@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct NotificationButton: View {
-    @Binding var navigationPath: NavigationPath
     @ObservedObject var viewModel: NotificationViewModel
+    let action: () -> Void
     
     var body: some View {
         Button {
-            navigationPath.append(NavigationDestination.notifications)
+            action()
         } label: {
             ZStack(alignment: .topTrailing) {
                 Circle()
@@ -50,7 +50,9 @@ struct NotificationButton: View {
 
 #Preview {
     NotificationButton(
-        navigationPath: .constant(NavigationPath()),
-        viewModel: NotificationViewModel()
+        viewModel: NotificationViewModel(),
+        action: {
+            print("Notification button tapped")
+        }
     )
 } 
