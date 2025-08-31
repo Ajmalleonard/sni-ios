@@ -51,10 +51,64 @@ struct OnboardingView: View {
            
                 
                 // Content
-                TabView(selection: $currentPage) {
-                    ForEach(0..<pages.count, id: \.self) { index in
-                        OnboardingPageView(page: pages[index])
-                            .tag(index)
+                if #available(iOS 17.0, *) {
+                    TabView(selection: $currentPage) {
+                        ForEach(0..<pages.count, id: \.self) { index in
+                            OnboardingPageView(page: pages[index])
+                                .tag(index)
+                        }
+                    }
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                    .animation(.easeInOut, value: currentPage)
+                } else {
+                    // Fallback for iOS 16 and earlier
+                    VStack {
+                        OnboardingPageView(page: pages[currentPage])
+                        
+                        // Manual navigation buttons
+                        HStack {
+                            if currentPage > 0 {
+                                Button("Previous") {
+                                    withAnimation(.easeInOut) {
+                                        currentPage -= 1
+                                    }
+                                }
+                                .fontWeight(.semibold)
+                                .padding()
+                                .background(Color("Secondary").opacity(0))
+                                .foregroundColor(Color("Secondary"))
+                                .clipShape(Capsule())
+                                .background(.ultraThinMaterial, in: .capsule)
+                            }
+                            
+                            Spacer()
+                            
+                            if currentPage < pages.count - 1 {
+                                Button("Next") {
+                                    withAnimation(.easeInOut) {
+                                        currentPage += 1
+                                    }
+                                }
+                                .fontWeight(.semibold)
+                                .padding()
+                                .background(Color("Secondary").opacity(0))
+                                .foregroundColor(Color("Secondary"))
+                                .clipShape(Capsule())
+                                .background(.ultraThinMaterial, in: .capsule)
+                            } else {
+                                Button("Get Started") {
+                                    onOnboardingComplete()
+                                }
+                                .fontWeight(.semibold)
+                                .padding()
+                                .background(Color("Secondary").opacity(0))
+                                .foregroundColor(Color("Secondary"))
+                                .clipShape(Capsule())
+                                .background(.ultraThinMaterial, in: .capsule)
+                            }
+                        }
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 50)
                     }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
