@@ -13,5 +13,13 @@
 			</array>
 		</dict>
 	</array>
+		<key>FirebaseAppDelegateProxyEnabled</key>
+		<false />
+		<key>FirebaseAutomaticScreenReportingEnabled</key>
+		<false />
+		<key>FirebaseInAppMessagingAutomaticDataCollectionEnabled</key>
+		<false />
+		<key>FirebaseAnalyticsCollectionEnabled</key>
+		<false />
 </dict>
 </plist>

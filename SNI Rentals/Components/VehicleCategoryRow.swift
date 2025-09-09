@@ -46,7 +46,7 @@ struct VehicleCategoryRow: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
         .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 30))
         .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
     

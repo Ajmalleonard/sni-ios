@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Environment</key>
+	<string>Staging</string>
+	<key>GooglePlacesAPIKey</key>
+	<string>YOUR_STAGING_GOOGLE_PLACES_API_KEY_HERE</string>
+	<key>BackendBaseURL</key>
+	<string>https://staging-api.snicolt.com</string>
+	<key>EnableLogging</key>
+	<true/>
+	<key>EnableAnalytics</key>
+	<true/>
+	<key>APITimeout</key>
+	<integer>20</integer>
+	<key>SocketIOURL</key>
+	<string>wss://staging-socket.snicolt.com</string>
+	<key>FirebaseProjectID</key>
+	<string>sni-rentals-staging</string>
+	<key>EnableDebugFeatures</key>
+	<true/>
+	<key>MockDataEnabled</key>
+	<false/>
+</dict>
+</plist>
+
+<!-- 
+STAGING CONFIGURATION
+====================
+
+This configuration is used for pre-production testing and QA.
+
+Features:
+- Production-like environment with staging data
+- Logging enabled for debugging issues
+- Analytics enabled to test tracking
+- Debug features enabled for QA testing
+- Mock data disabled (uses real staging data)
+- Moderate API timeouts
+
+Setup Instructions:
+1. Replace YOUR_STAGING_GOOGLE_PLACES_API_KEY_HERE with your staging API key
+2. Ensure staging-api.snicolt.com points to your staging backend
+3. Configure Firebase project for staging environment
+4. This file should be committed to version control
+-->

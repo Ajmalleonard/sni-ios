@@ -39,7 +39,7 @@ struct MessageState {
 
 // MARK: - Optimized AuthModel
 @MainActor
-class AuthModel: ObservableObject, Sendable {
+class AuthModel: ObservableObject {
     // Combined state properties - reduces UI updates
     @Published var authState = AuthState()
     @Published var registrationState = RegistrationState()

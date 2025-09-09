@@ -22,9 +22,33 @@
 		CEC880222E182B79009D61FD /* SNI Rentals.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SNI Rentals.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A15FBC4A2E705F16004948E2 /* Exceptions for "SNI Rentals" folder in "SNI Rentals" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Extensions/CodeKit.json,
+			);
+			target = CEC880212E182B79009D61FD /* SNI Rentals */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		A15FBC4B2E705F16004948E2 /* Exceptions for "SNI Rentals" folder in "Compile Sources" phase from "SNI Rentals" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = CEC8801E2E182B79009D61FD /* Sources */;
+			membershipExceptions = (
+				Extensions/CodeKit.json,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		CEC880242E182B79009D61FD /* SNI Rentals */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A15FBC4A2E705F16004948E2 /* Exceptions for "SNI Rentals" folder in "SNI Rentals" target */,
+				A15FBC4B2E705F16004948E2 /* Exceptions for "SNI Rentals" folder in "Compile Sources" phase from "SNI Rentals" target */,
+			);
 			path = "SNI Rentals";
 			sourceTree = "<group>";
 		};

@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "searches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userId", "order": "ASCENDING"},
+        {"fieldPath": "timestamp", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "searches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "isConfirmed", "order": "ASCENDING"},
+        {"fieldPath": "timestamp", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "searches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "searchType", "order": "ASCENDING"},
+        {"fieldPath": "timestamp", "order": "DESCENDING"}
+      ]
+    }
+  ],
+  "fieldOverrides": []
+} 

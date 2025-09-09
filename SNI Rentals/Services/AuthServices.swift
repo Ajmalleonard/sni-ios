@@ -515,7 +515,7 @@ class AuthService {
 
 // MARK: - Apple Sign-In Delegate
 @MainActor
-class AppleSignInDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding, @unchecked Sendable {
+class AppleSignInDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     private let completion: (Result<LoginResponse, Error>) -> Void
     
     init(completion: @escaping (Result<LoginResponse, Error>) -> Void) {

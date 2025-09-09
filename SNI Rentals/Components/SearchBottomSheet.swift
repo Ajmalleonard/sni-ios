@@ -22,7 +22,7 @@ struct SearchBottomSheet: View {
     private let hapticFeedback = UIImpactFeedbackGenerator(style: .medium)
     
     private let maxHeight: CGFloat = UIScreen.main.bounds.height - 100
-    private let minHeight: CGFloat = 100
+    private let minHeight: CGFloat = 80
     private let quickActionsHeight: CGFloat = 220 // Height for quick actions stage
     
     var body: some View {
@@ -30,7 +30,7 @@ struct SearchBottomSheet: View {
             VStack(spacing: 0) {
                 // Drag Indicator
                 RoundedRectangle(cornerRadius: 3)
-                    .fill(Color.blue.opacity(0.4))
+                    .fill(Color.blue.opacity(0.08))
                     .frame(width: 60, height: 6)
                     .padding(.top, 10)
                 
@@ -44,29 +44,34 @@ struct SearchBottomSheet: View {
                             Image("search")
                                 .renderingMode(.template)
                                 .resizable()
-                                .frame(width: 36,height: 36)
+                                .frame(width: 25, height: 25)
                                 .foregroundColor(.blue)
                             Text("Search Destination")
                                 .foregroundColor(.black)
+                            Spacer()
                         }
                         .padding()
-                        .background(.blue.opacity(0.3))
+                        .background(.blue.opacity(0.08))
                         .clipShape(Capsule())
                     }
+                    .frame(maxWidth: .infinity)
                     
                     // Profile Button
                     Button(action: onProfileTap) {
                         Image("user_1")
                             .renderingMode(.template)
                             .resizable()
-                            .frame(width: 36,height: 36)
+                            .frame(width: 20, height: 20)
                             .foregroundColor(.blue)
                             .padding()
-                            .background(.blue.opacity(0.3))
+                            .background(.blue.opacity(0.1))
+                            .clipShape(Circle())
                     }
+                    .frame(width: 50, height: 50)
                 }
-                .padding(.horizontal)
                 .padding(.top, 10)
+                .padding(.horizontal, 20)
+             
                 
                 // Quick Actions - visible in quickActions and history stages
                 if currentStage == .quickActions || currentStage == .history {
@@ -84,7 +89,7 @@ struct SearchBottomSheet: View {
                         .padding(.horizontal)
                     }
                     .padding(.top, 20)
-                    .transition(.opacity)
+                    .transition(.blurReplace.animation(.easeIn(duration: 3)))
                 }
                 
                 // Recent Routes - only visible in history stage
@@ -103,7 +108,7 @@ struct SearchBottomSheet: View {
                         }
                         .padding(.horizontal)
                     }
-                    .transition(.opacity)
+                    .transition(.blurReplace.animation(.easeIn(duration: 3)))
                 }
                 
                 Spacer()
@@ -134,7 +139,7 @@ struct SearchBottomSheet: View {
                             case .history:
                                 nextStage = .quickActions
                             }
-                        } else if -height > 50 { // Swipe up
+                        } else if height < -50 { // Swipe up
                             switch currentStage {
                             case .collapsed:
                                 nextStage = .quickActions
@@ -146,78 +151,181 @@ struct SearchBottomSheet: View {
                             }
                         }
                         
-                        // Only trigger haptic feedback if stage changed
+                        // Update stage and animate
+                        withAnimation(.spring()) {
+                            currentStage = nextStage
+                            updateOffset()
+                        }
+                        
+                        // Haptic feedback
                         if nextStage != currentStage {
                             hapticFeedback.impactOccurred()
                         }
-                        
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            currentStage = nextStage
-                            
-                            // Set the appropriate offset based on the stage
-                            switch currentStage {
-                            case .collapsed:
-                                offset = maxHeight - minHeight
-                            case .quickActions:
-                                offset = maxHeight - quickActionsHeight
-                            case .history:
-                                offset = 0
-                            }
-                            
-                            lastOffset = offset
-                        }
                     }
             )
-            .onAppear {
-                // Initialize haptic feedback
-                hapticFeedback.prepare()
+        }
+    }
+    
+    private func updateOffset() {
+        switch currentStage {
+        case .collapsed:
+            offset = maxHeight - minHeight
+        case .quickActions:
+            offset = maxHeight - quickActionsHeight
+        case .history:
+            offset = 0
+        }
+    }
+}
+
+// MARK: - Preview
+struct SearchBottomSheet_Previews: PreviewProvider {
+    static var previews: some View {
+        ZStack {
+            // Background to simulate the main view
+            Color.gray.opacity(0.2)
+                .ignoresSafeArea()
+            
+            VStack {
+                Spacer()
                 
-                // Start in collapsed state
-                offset = maxHeight - minHeight
-                lastOffset = offset
-                currentStage = .collapsed
+                SearchBottomSheet(
+                    navigationPath: .constant(NavigationPath()),
+                    showingSearchScreen: .constant(false),
+                    onProfileTap: {
+                        print("Profile tapped")
+                    }
+                )
+                .frame(height: UIScreen.main.bounds.height - 100)
             }
         }
-        .frame(maxHeight: maxHeight)
-        .ignoresSafeArea(edges: .bottom)
-    }
-}
-
-struct QuickActionButton: View {
-    let icon: String
-    let text: String
-    
-    var body: some View {
-        VStack {
-            Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundColor(.black)
-                .frame(width: 50, height: 50)
-                .background(Color.gray.opacity(0.1))
-                .clipShape(Circle())
+        .previewDisplayName("SearchBottomSheet - Collapsed")
+        
+        // Preview with Quick Actions stage
+        ZStack {
+            Color.gray.opacity(0.2)
+                .ignoresSafeArea()
             
-            Text(text)
-                .font(.caption)
-                .foregroundColor(.black)
+            VStack {
+                Spacer()
+                
+                SearchBottomSheetWithStage(stage: .quickActions)
+                    .frame(height: UIScreen.main.bounds.height - 100)
+            }
         }
+        .previewDisplayName("SearchBottomSheet - Quick Actions")
+        
+        // Preview with History stage
+        ZStack {
+            Color.gray.opacity(0.2)
+                .ignoresSafeArea()
+            
+            VStack {
+                Spacer()
+                
+                SearchBottomSheetWithStage(stage: .history)
+                    .frame(height: UIScreen.main.bounds.height - 100)
+            }
+        }
+        .previewDisplayName("SearchBottomSheet - History")
     }
 }
 
-struct RecentRouteItem: View {
-    let title: String
+// Helper view for previewing different stages
+struct SearchBottomSheetWithStage: View {
+    @State private var currentStage: BottomSheetStage
+    
+    init(stage: BottomSheetStage) {
+        _currentStage = State(initialValue: stage)
+    }
     
     var body: some View {
-        HStack {
-            Image(systemName: "clock.fill")
-                .foregroundColor(.gray)
-            Text(title)
-                .foregroundColor(.black)
+        VStack(spacing: 0) {
+            // Drag Indicator
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color.blue.opacity(0.4))
+                .frame(width: 60, height: 6)
+                .padding(.top, 10)
+            
+            // Search Bar and Profile
+            HStack(spacing: 15) {
+                // Search Button
+                Button {
+                    // Mock action
+                } label: {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .renderingMode(.template)
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                            .foregroundColor(.blue)
+                        Text("Search Destination")
+                            .foregroundColor(.black)
+                        Spacer()
+                    }
+                    .padding()
+                    .background(.blue.opacity(0.3))
+                    .clipShape(Capsule())
+                }
+                .frame(maxWidth: .infinity)
+                
+                // Profile Button
+                Button(action: {}) {
+                    Image(systemName: "person.circle")
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.blue)
+                        .padding()
+                        .background(.blue.opacity(0.3))
+                        .clipShape(Circle())
+                }
+                .frame(width: 50, height: 50)
+            }
+            .padding(.horizontal, 5)
+            .padding(.top, 10)
+            
+            // Quick Actions - visible in quickActions and history stages
+            if currentStage == .quickActions || currentStage == .history {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Quick Actions")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    HStack(spacing: 20) {
+                        QuickActionButton(icon: "house.fill", text: "Home")
+                        QuickActionButton(icon: "car.fill", text: "Rides")
+                        QuickActionButton(icon: "clock.fill", text: "Recent")
+                        QuickActionButton(icon: "exclamationmark.triangle.fill", text: "Help")
+                    }
+                    .padding(.horizontal)
+                }
+                .padding(.top, 20)
+            }
+            
+            // Recent Routes - only visible in history stage
+            if currentStage == .history {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Recent Routes")
+                        .font(.headline)
+                        .padding(.horizontal)
+                        .padding(.top, 5)
+                    
+                    VStack(spacing: 15) {
+                        RecentRouteItem(title: "8 Sinza")
+                        RecentRouteItem(title: "Magomeni, kanisani")
+                        RecentRouteItem(title: "Kariakoo, Lumumba")
+                        RecentRouteItem(title: "Kariakoo, Lumumba")
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            
             Spacer()
-            Image(systemName: "chevron.right")
-                .foregroundColor(.gray)
         }
-        .padding()
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(10)
+        .frame(maxWidth: .infinity)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 50))
+        .shadow(color: .black.opacity(0.1), radius: 10)
     }
 }

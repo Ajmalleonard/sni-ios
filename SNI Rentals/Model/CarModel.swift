@@ -53,7 +53,7 @@ struct RentalState {
 
 // MARK: - Car Model
 @MainActor
-class CarModel: ObservableObject, Sendable {
+class CarModel: ObservableObject {
     // Published state properties
     @Published var carState = CarState()
     @Published var filterState = FilterState()

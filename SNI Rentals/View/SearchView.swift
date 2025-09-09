@@ -10,40 +10,12 @@ import GoogleMaps
 import CoreLocation
 
 
-
-let darEsSalaam = GMSCameraPosition.camera(
-        withLatitude: -6.7924,
-        longitude: 39.2083,
-        zoom: 15.0
-    )
-
-
-
-
 // Make CLLocationCoordinate2D conform to Equatable
 extension CLLocationCoordinate2D: @retroactive Equatable {
     public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
         return lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
     }
 }
-
-
-
-// Route information model
-struct RouteInfo {
-    let fromLocation: SearchLocation
-    let toLocation: SearchLocation
-    let distance: String
-    let duration: String
-    let estimatedCost: String
-    let routePolyline: String? // For drawing the route on map
-    
-    var summary: String {
-        "\(distance) • \(duration) • \(estimatedCost)"
-    }
-}
-
-// Enums moved to SharedTypes.swift
 
 struct SearchView: View {
     @EnvironmentObject var authModel: AuthModel
@@ -141,7 +113,7 @@ struct SearchView: View {
                             }
                         }
                         .onDisappear {
-                            print("🔙 NotificationView disappeared - showing bottom sheet")
+                            print("NotificationView disappeared - showing bottom sheet")
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 isShowingProfile = false
                             }
@@ -269,185 +241,6 @@ struct SearchView: View {
 
 
 
-
-// ProfileImage moved to Components/ProfileImage.swift
-
-// BottomSheetViews moved to Components/BottomSheetViews.swift
-
-// MARK: - Route Overlay View (Uber-style)
-struct RouteOverlayView: View {
-    let route: RouteInfo
-    let onClose: () -> Void
-    let onBookRide: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            // Handle bar
-            RoundedRectangle(cornerRadius: 2.5)
-                .fill(Color.gray.opacity(0.4))
-                .frame(width: 40, height: 5)
-                .padding(.top, 8)
-            
-            // Route information
-            VStack(spacing: 16) {
-                // Route header
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Route Preview")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                        
-                        Text(route.summary)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: onClose) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.gray)
-                    }
-                }
-                
-                // From and To locations
-                VStack(spacing: 12) {
-                    LocationRow(
-                        icon: "circle.fill",
-                        iconColor: .green,
-                        title: "From",
-                        location: route.fromLocation.name,
-                        subtitle: route.fromLocation.address
-                    )
-                    
-                    // Dotted line
-                    VStack {
-                        ForEach(0..<3, id: \.self) { _ in
-                            Circle()
-                                .fill(Color.gray.opacity(0.5))
-                                .frame(width: 4, height: 4)
-                        }
-                    }
-                    
-                    LocationRow(
-                        icon: "circle.fill",
-                        iconColor: .red,
-                        title: "To",
-                        location: route.toLocation.name,
-                        subtitle: route.toLocation.address
-                    )
-                }
-                .padding(.vertical, 8)
-                
-                // Route details
-                HStack(spacing: 20) {
-                    RouteDetailItem(
-                        icon: "location.fill",
-                        title: "Distance",
-                        value: route.distance
-                    )
-                    
-                    RouteDetailItem(
-                        icon: "clock.fill",
-                        title: "Duration",
-                        value: route.duration
-                    )
-                    
-                    RouteDetailItem(
-                        icon: "dollarsign.circle.fill",
-                        title: "Cost",
-                        value: route.estimatedCost
-                    )
-                }
-                .padding(.horizontal)
-                
-                // Book ride button
-                Button(action: onBookRide) {
-                    Text("Book This Ride")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.black)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .padding(.top, 8)
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 20)
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
-        )
-        .padding(.horizontal, 20)
-    }
-}
-
-// MARK: - Location Row
-struct LocationRow: View {
-    let icon: String
-    let iconColor: Color
-    let title: String
-    let location: String
-    let subtitle: String
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundColor(iconColor)
-                .frame(width: 20, height: 20)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .textCase(.uppercase)
-                
-                Text(location)
-                    .font(.body)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
-                
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
-            
-            Spacer()
-        }
-    }
-}
-
-// MARK: - Route Detail Item
-struct RouteDetailItem: View {
-    let icon: String
-    let title: String
-    let value: String
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(Color("Secondary"))
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
-            
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
 
 
 
