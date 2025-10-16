@@ -184,7 +184,9 @@ class ConfigurationManager {
         #if DEBUG
         return "AIzaSyBWiQw1KnUfCMbGsbRJCpRF-DXzBaxunek"
         #else
-        fatalError("Google Places API key not configured. Please set GOOGLE_PLACES_API_KEY environment variable or add to \(currentEnvironment.configFileName).plist")
+        // Return empty string instead of crashing - let the app handle gracefully
+        print("⚠️ Google Places API key not configured. Please set GOOGLE_PLACES_API_KEY environment variable or add to \(currentEnvironment.configFileName).plist")
+        return ""
         #endif
     }
     

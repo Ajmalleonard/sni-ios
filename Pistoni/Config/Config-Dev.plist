@@ -5,7 +5,7 @@
 	<key>Environment</key>
 	<string>Development</string>
 	<key>GooglePlacesAPIKey</key>
-	<string>YOUR_DEV_GOOGLE_PLACES_API_KEY_HERE</string>
+	<string>AIzaSyBWiQw1KnUfCMbGsbRJCpRF-DXzBaxunek</string>
 	<key>BackendBaseURL</key>
 	<string>https://api.snicolt.com</string>
 	<key>EnableLogging</key>

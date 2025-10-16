@@ -14,17 +14,28 @@ struct SearchScreen: View {
     @StateObject private var locationManager = LocationManager()
     @Environment(\.dismiss) private var dismiss
     
-    @State private var searchText = ""
+    @Binding var searchText: String
     @State private var selectedSearchType: SearchType = .general
     @State private var showingLocationPicker = false
     @State private var selectedPrediction: PlacePrediction?
     @State private var fromLocation: SearchLocation?
     @State private var toLocation: SearchLocation?
     
+    // New state variables for dual fields
+    @State private var pickupText: String = ""
+    @State private var destinationText: String = ""
+    @State private var activeField: LocationField = .pickup
+    
     // Callback for route selection
     let onRouteSelected: ((SearchLocation, SearchLocation) -> Void)?
     
-    init(onRouteSelected: ((SearchLocation, SearchLocation) -> Void)? = nil, isPreview: Bool = false) {
+    // Enum to track which field is active
+    enum LocationField {
+        case pickup, destination, none
+    }
+    
+    init(searchText: Binding<String> = .constant(""), onRouteSelected: ((SearchLocation, SearchLocation) -> Void)? = nil, isPreview: Bool = false) {
+        self._searchText = searchText
         self.onRouteSelected = onRouteSelected
         
         // Check if running in preview mode
@@ -38,26 +49,29 @@ struct SearchScreen: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 0) {
-                    // Header Section (ProfileView Style)
-                    headerSection
+                   
+                  
                     
                     // Main Content
                     VStack(spacing: 25) {
                         // Search Input Section
-                        searchInputSection
-                        
-                        // Search Type Filter
-                        searchTypeFilterSection
+                       
+                            
+                            searchInputSection
+                           
+                            
+                       
+                    
                         
                         // Search Results or Suggestions
-                        if searchService.searchState.isSearching {
+                        if activeField != .none && searchService.searchState.isSearching {
                             loadingSection
-                        } else if !searchService.searchState.predictions.isEmpty {
+                        } else if activeField != .none && !searchService.searchState.predictions.isEmpty {
                             searchResultsSection
-                        } else if !searchText.isEmpty {
+                        } else if activeField != .none && !searchText.isEmpty {
                             noResultsSection
-                        } else {
-                            // Recent and Popular Searches
+                        } else if activeField == .none {
+                            // Recent and Popular Searches (only when no field is active)
                             recentSearchesSection
                             popularSearchesSection
                         }
@@ -67,29 +81,9 @@ struct SearchScreen: View {
                     .padding(.bottom, 100)
                 }
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Search")
+            .background(.white)
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden()
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(Color("Secondary"))
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        searchService.clearSearchState()
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
-                    }
-                    .opacity(searchText.isEmpty ? 0 : 1)
-                }
-            }
         }
         .onAppear {
             Task {
@@ -104,121 +98,165 @@ struct SearchScreen: View {
         }
     }
     
-    // MARK: - Header Section (ProfileView Style)
-    private var headerSection: some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 16) {
-                // Search Icon
-                Image(systemName: "magnifyingglass")
-                    .font(.title2)
-                    .foregroundColor(Color("Secondary"))
-                    .frame(width: 50, height: 50)
-                    .background(Color("Secondary").opacity(0.1))
-                    .clipShape(Circle())
-                
-                // Search Context
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Where to?")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                    
-                    Text("Search for locations, addresses, or places")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                
-                Spacer()
-                
-                // Location Button
-                Button {
-                    requestLocationPermission()
-                } label: {
-                    Image(systemName: locationManager.isLocationEnabled ? "location.fill" : "location")
-                        .font(.title2)
-                        .foregroundColor(Color("Secondary"))
-                        .frame(width: 44, height: 44)
-                        .background(Color.gray.opacity(0.2))
-                        .clipShape(Circle())
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 20)
-            .frame(maxWidth: .infinity)
-            .background(Color("Primary"))
-            .clipShape(RoundedRectangle(cornerRadius: 25))
-        }
-        .padding(.horizontal, 20)
-    }
+ 
     
     // MARK: - Search Input Section
     private var searchInputSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Search Location")
+            Text("Where to?")
                 .font(.footnote)
                 .fontWeight(.medium)
                 .foregroundColor(.secondary)
                 .textCase(.uppercase)
-                .padding(.horizontal, 25)
             
-            VStack(spacing: 0) {
-                HStack(spacing: 12) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.title3)
-                        .foregroundColor(.gray)
-                    
-                    TextField("Enter location, address, or place name", text: $searchText)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.words)
-                    
-                    if !searchText.isEmpty {
-                        Button {
-                            searchText = ""
+            VStack(spacing: 12) {
+                // Pickup Field
+                VStack(spacing: 0) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                            .frame(width: 20, height: 20)
+                        
+                        Button(action: {
+                            print("🎯 Pickup button tapped - setting activeField to .pickup")
+                            print("   Current searchText: '\(searchText)'")
+                            print("   Current activeField: \(activeField)")
+                            activeField = .pickup
+                            searchText = "" // Clear search text when switching fields
                             searchService.clearSearchState()
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
+                            print("   New activeField: \(activeField)")
+                            print("   Cleared searchText: '\(searchText)'")
+                        }) {
+                            HStack {
+                                Text(pickupText.isEmpty ? "Pickup Location" : pickupText)
+                                    .font(.body)
+                                    .foregroundColor(pickupText.isEmpty ? .secondary : .primary)
+                                    .multilineTextAlignment(.leading)
+                                
+                                Spacer()
+                            }
                         }
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-            }
-            .background(Color("Primary"))
-            .clipShape(RoundedRectangle(cornerRadius: 25))
-        }
-    }
-    
-    // MARK: - Search Type Filter Section
-    private var searchTypeFilterSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Search Type")
-                .font(.footnote)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
-                .padding(.horizontal, 25)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(SearchType.allCases, id: \.rawValue) { searchType in
-                        SearchTypeButton(
-                            searchType: searchType,
-                            isSelected: selectedSearchType == searchType
-                        ) {
-                            selectedSearchType = searchType
-                            if !searchText.isEmpty {
-                                performSearch(query: searchText)
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        if !pickupText.isEmpty {
+                            Button {
+                                pickupText = ""
+                                fromLocation = nil
+                                if activeField == .pickup {
+                                    searchText = ""
+                                    searchService.clearSearchState()
+                                }
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
                             }
                         }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
                 }
-                .padding(.horizontal, 25)
+                .background(Color("Primary"))
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(activeField == .pickup ? Color.green.opacity(0.9) : Color.gray.opacity(0.3), lineWidth: activeField == .pickup ? 2 : 1)
+                )
+                
+                // Destination Field
+                VStack(spacing: 0) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "location.fill")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .frame(width: 20, height: 20)
+                        
+                        Button(action: {
+                            print("🎯 Destination button tapped - setting activeField to .destination")
+                            print("   Current searchText: '\(searchText)'")
+                            print("   Current activeField: \(activeField)")
+                            activeField = .destination
+                            searchText = "" // Clear search text when switching fields
+                            searchService.clearSearchState()
+                            print("   New activeField: \(activeField)")
+                            print("   Cleared searchText: '\(searchText)'")
+                        }) {
+                            HStack {
+                                Text(destinationText.isEmpty ? "Destination" : destinationText)
+                                    .font(.body)
+                                    .foregroundColor(destinationText.isEmpty ? .secondary : .primary)
+                                    .multilineTextAlignment(.leading)
+                                
+                                Spacer()
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        if !destinationText.isEmpty {
+                            Button {
+                                destinationText = ""
+                                toLocation = nil
+                                if activeField == .destination {
+                                    searchText = ""
+                                    searchService.clearSearchState()
+                                }
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                }
+                .background(Color("Primary"))
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(activeField == .destination ? Color.red.opacity(0.9) : Color.gray.opacity(0.3), lineWidth: activeField == .destination ? 2 : 1)
+                )
+                
+//                // Search Field (only shown when a field is active)
+//                if activeField != .none {
+//                    VStack(spacing: 0) {
+//                        HStack(spacing: 12) {
+//                            Image("maper")
+//                                .renderingMode(.template)
+//                                .resizable()
+//                                .frame(width: 20, height: 20)
+//                                .foregroundColor(Color(.systemBlue))
+//                            
+//                            TextField("Search for \(activeField == .pickup ? "pickup" : "destination") location", text: $searchText)
+//                                .font(.body)
+//                                .foregroundColor(.primary)
+//                                .autocorrectionDisabled()
+//                                .textInputAutocapitalization(.words)
+//                            
+//                            if !searchText.isEmpty {
+//                                Button {
+//                                    searchText = ""
+//                                    searchService.clearSearchState()
+//                                } label: {
+//                                    Image(systemName: "xmark.circle.fill")
+//                                        .foregroundColor(.gray)
+//                                }
+//                            }
+//                        }
+//                        .padding(.horizontal, 20)
+//                        .padding(.vertical, 16)
+//                    }
+//                    .background(Color("Primary"))
+//                    .clipShape(RoundedRectangle(cornerRadius: 15))
+//                    .overlay(
+//                        RoundedRectangle(cornerRadius: 15)
+//                            .stroke(Color.blue.opacity(0.9), lineWidth: 2)
+//                    )
+//                }
             }
         }
     }
+    
+
     
     // MARK: - Loading Section
     private var loadingSection: some View {
@@ -391,16 +429,35 @@ struct SearchScreen: View {
     }
     
     private func performSearch(query: String) {
-        guard let userId = authModel.currentUser?.id else { return }
+        print("🔍 SearchScreen.performSearch called with query: '\(query)'")
+        print("   Active field: \(activeField)")
+        print("   Query length: \(query.count)")
+        
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            print("   ❌ Empty query, skipping search")
+            return
+        }
+        
+        guard let userId = authModel.currentUser?.id else {
+            print("   ❌ No user ID found")
+            print("   Current user: \(String(describing: authModel.currentUser))")
+            print("   Is authenticated: \(authModel.authState.isAuthenticated)")
+            return
+        }
+        
+        print("   ✅ User ID: \(userId)")
         
         let userLocation = locationManager.currentLocation?.coordinate
+        print("   📍 User location: \(String(describing: userLocation))")
         
+        print("   🚀 Calling searchService.searchWithDebounce...")
         searchService.searchWithDebounce(
             query: query,
             searchType: selectedSearchType,
             userId: userId,
             userLocation: userLocation
         )
+        print("   ✅ searchWithDebounce called successfully")
     }
     
     private func selectPrediction(_ prediction: PlacePrediction, at index: Int) {
@@ -419,22 +476,38 @@ struct SearchScreen: View {
             // Get the selected location details
             if let locationService = try? await GooglePlacesService().fetchPlaceDetails(placeId: prediction.placeId) {
                 
-                // Handle different search types
-                switch selectedSearchType {
+                // Handle field selection based on active field
+                switch activeField {
                 case .pickup:
                     fromLocation = locationService
+                    pickupText = prediction.mainText
+                    // Clear search and switch to destination
+                    searchText = ""
+                    searchService.clearSearchState()
+                    activeField = .destination
+                    
                 case .destination:
                     toLocation = locationService
-                case .general, .nearbyVehicles:
-                    // For general search, set as destination
+                    destinationText = prediction.mainText
+                    // Clear search and deactivate field
+                    searchText = ""
+                    searchService.clearSearchState()
+                    activeField = .none
+                    
+                    // If we have both locations, trigger route selection
+                    if let from = fromLocation {
+                        onRouteSelected?(from, locationService)
+                        dismiss()
+                    }
+                    
+                case .none:
+                    // Fallback to original behavior
                     toLocation = locationService
+                    destinationText = prediction.mainText
                 }
                 
-                // If we have both locations, trigger route selection
-                if let from = fromLocation, let to = toLocation {
-                    onRouteSelected?(from, to)
-                } else if let to = toLocation {
-                    // Create a default "current location" for from
+                // If we only have destination but no pickup, create current location as pickup
+                if fromLocation == nil && toLocation != nil && activeField == .none {
                     let currentLocation = SearchLocation(
                         placeId: nil,
                         name: "Current Location",
@@ -445,12 +518,15 @@ struct SearchScreen: View {
                         country: "Tanzania",
                         postalCode: nil
                     )
-                    onRouteSelected?(currentLocation, to)
+                    fromLocation = currentLocation
+                    pickupText = "Current Location"
+                    
+                    if let to = toLocation {
+                        onRouteSelected?(currentLocation, to)
+                        dismiss()
+                    }
                 }
             }
-            
-            // Navigate back
-            dismiss()
         }
     }
     
@@ -663,11 +739,11 @@ struct LocationPickerView: View {
 }
 
 #Preview {
-    // Use a mock AuthModel for previews to avoid network calls
+    @Previewable @State var searchText = ""
     let mockAuthModel = AuthModel()
     mockAuthModel.isPreview = true
     
-    return SearchScreen(isPreview: true)
+    return SearchScreen(searchText: $searchText, isPreview: true)
         .environmentObject(mockAuthModel)
 }
 

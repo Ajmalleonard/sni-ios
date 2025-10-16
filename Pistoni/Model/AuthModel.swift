@@ -2,7 +2,7 @@ import Combine
 import Foundation
 
 // MARK: - Optimized State Models
-struct AuthState {
+struct AuthState: Codable {
     var currentUser: User?
     var accessToken: String?
     var refreshToken: String?
@@ -48,10 +48,11 @@ class AuthModel: ObservableObject {
     
     // Flag to indicate if this instance is being used in a preview
     var isPreview: Bool = false
-    
+
     private let authService = AuthService()
     private var cancellables = Set<AnyCancellable>()
-    
+    private let authStateKey = "authState"
+
     // Computed properties for backward compatibility
     var currentUser: User? { authState.currentUser }
     var accessToken: String? { authState.accessToken }
@@ -76,6 +77,7 @@ class AuthModel: ObservableObject {
         }
         
         setupMessageAutoClearing()
+        loadAuthState()
     }
     
     // MARK: - Authentication Methods
@@ -134,6 +136,7 @@ class AuthModel: ObservableObject {
         authState = AuthState()
         registrationState = RegistrationState()
         messageState = MessageState.none
+        clearAuthState()
     }
     
     // MARK: - Private Async Handlers
@@ -149,6 +152,7 @@ class AuthModel: ObservableObject {
                             refreshToken: response.refreshToken
                         )
                         self.messageState = MessageState.success("Login successful")
+                        self.saveAuthState()
                         
                     case .failure(let error):
                         self.messageState = MessageState.error(self.parseErrorMessage(error))
@@ -171,6 +175,7 @@ class AuthModel: ObservableObject {
                             refreshToken: response.refreshToken
                         )
                         self.messageState = MessageState.success("Google Sign-In successful")
+                        self.saveAuthState()
                         
                     case .failure(let error):
                         self.messageState = MessageState.error(self.parseErrorMessage(error))
@@ -191,6 +196,7 @@ class AuthModel: ObservableObject {
                     refreshToken: response.refreshToken
                 )
                 self.messageState = MessageState.success("Apple Sign-In successful")
+                self.saveAuthState()
             }
         } catch {
             await MainActor.run {
@@ -256,6 +262,7 @@ class AuthModel: ObservableObject {
                         )
                         self.registrationState = RegistrationState() // Reset registration state
                         self.messageState = MessageState.success("Registration completed successfully")
+                        self.saveAuthState()
                         
                     case .failure(let error):
                         self.messageState = MessageState.error(self.parseErrorMessage(error))
@@ -320,6 +327,26 @@ class AuthModel: ObservableObject {
                 isLoading = false
             }
         }
+    }
+    
+    private func saveAuthState() {
+        let encoder = JSONEncoder()
+        if let encoded = try? encoder.encode(authState) {
+            UserDefaults.standard.set(encoded, forKey: authStateKey)
+        }
+    }
+
+    private func loadAuthState() {
+        if let savedAuthState = UserDefaults.standard.object(forKey: authStateKey) as? Data {
+            let decoder = JSONDecoder()
+            if let loadedAuthState = try? decoder.decode(AuthState.self, from: savedAuthState) {
+                self.authState = loadedAuthState
+            }
+        }
+    }
+
+    private func clearAuthState() {
+        UserDefaults.standard.removeObject(forKey: authStateKey)
     }
     
     private func setupMessageAutoClearing() {

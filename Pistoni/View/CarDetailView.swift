@@ -11,461 +11,302 @@ struct CarDetailView: View {
     let car: Car
     @EnvironmentObject var authModel: AuthModel
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedImageIndex = 0
+    @State private var selectedTab = "About"
     @State private var showingBookingView = false
     
     var body: some View {
-        NavigationView {
-            ScrollView {
+  
+            ZStack(alignment: .bottom) {
+                // The background now consists of the image and a solid color, preventing a black screen.
+                Color(.black).ignoresSafeArea()
                 VStack(spacing: 0) {
-                    // Header Section - ProfileView Style
-                    carHeaderSection
-                    
-                    // Content Sections
-                    VStack(spacing: 20) {
-                        carSpecificationsSection
-                        ownerInformationSection
-                        locationDetailsSection
-                        reviewsSection
-                        pricingSection
+                    AsyncImage(url: URL(string: car.images.first ?? "")) { image in
+                        image.resizable()
+                            .scaledToFit()
+                            .frame(width: geometry.size.width, height: geometry.size.height * 0.45)
+                            .clipped()
+                    } placeholder: {
+                        Color.gray
+                            .frame(width: geometry.size.width, height: geometry.size.height * 0.45)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 100) // Space for booking button
+                    Color(UIColor.systemGroupedBackground)
                 }
-            }
-            .background(Color(.systemGroupedBackground))
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden()
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
-                        }
-                        .foregroundColor(.blue)
-                    }
-                }
+                .frame(maxWidth: .infinity)
+                .frame(height: geometry.size.height * 0.45)
+                .frame(maxHeight: .infinity, alignment: .top)
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        // Share car details
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                            .foregroundColor(.blue)
+
+                // Draggable details card
+                DraggableView(geometry: geometry) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        header
+                        tabView
+                        
+                        if selectedTab == "About" {
+                            aboutSection
+                        } else if selectedTab == "Gallery" {
+                            gallerySection
+                        } else if selectedTab == "Review" {
+                            reviewSection
+                        }
                     }
+                    .padding(.horizontal)
+                    .padding(.top, 30)
                 }
-            }
-            .overlay(alignment: .bottom) {
-                bookingButton
-            }
-            .sheet(isPresented: $showingBookingView) {
-                BookingView(car: car)
-                    .environmentObject(authModel)
-            }
-        }
-    }
-    
-    // MARK: - Header Section
-    private var carHeaderSection: some View {
-        VStack(spacing: 0) {
-            // Car Image Gallery
-            CarImageGallery(
-                images: car.images,
-                selectedIndex: $selectedImageIndex
-            )
-            .frame(height: 300)
-            
-            // Car Info Header
-            VStack(spacing: 0) {
-                HStack(alignment: .center, spacing: 16) {
-                    // Car Icon
-                    Image(systemName: car.vehicleType.icon)
-                        .font(.system(size: 40))
-                        .foregroundColor(Color("Secondary"))
-                        .frame(width: 60, height: 60)
-                        .background(Color("Secondary").opacity(0.1))
-                        .clipShape(Circle())
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(car.displayName)
+
+                // Header with back button, aligned to the top.
+                VStack {
+                    HStack {
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "arrow.left")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.black.opacity(0.5))
+                                .clipShape(Circle())
+                        }
+                        Spacer()
+                        Text("Car Details")
                             .font(.title2)
                             .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        
-                        Text("\(car.year) • \(car.color) • \(car.licensePlate)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        HStack {
-                            Text(car.priceFormatted)
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color("Secondary"))
-                            
-                            Text("per day")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                            .foregroundColor(.white)
+                        Spacer()
                     }
-                    
+                    .padding(.horizontal)
                     Spacer()
-                    
-                    // Status Badge
-                    Text(car.status.displayName)
-                        .font(.caption)
+                }
+                
+                // Booking footer is now correctly aligned to the bottom.
+                bookingFooter
+            }
+        
+            .ignoresSafeArea()
+        
+    }
+    
+    private var header: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(car.displayName)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                Text(car.make)
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            HStack(spacing: 4) {
+                Image(systemName: "star.fill")
+                    .foregroundColor(.yellow)
+                Text(String(format: "%.1f", car.averageRating))
+                    .fontWeight(.semibold)
+            }
+            .font(.headline)
+        }
+    }
+
+    // Tabs header
+    private var tabView: some View {
+        HStack {
+            ForEach(["About", "Gallery", "Review"], id: \.self) { tab in
+                Button(action: { selectedTab = tab }) {
+                    Text(tab)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color(car.status.color))
+                        .foregroundColor(selectedTab == tab ? .white : .primary)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 20)
+                        .background(selectedTab == tab ? Color.black : Color.clear)
                         .clipShape(Capsule())
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 20)
-                .frame(maxWidth: .infinity)
-                .background(Color("Primary"))
-                .clipShape(RoundedRectangle(cornerRadius: 25))
             }
-            .padding(.horizontal, 20)
-            .offset(y: -30)
+            Spacer()
+        }
+        .padding(4)
+        .background(Color.gray.opacity(0.1))
+        .clipShape(Capsule())
+    }
+
+    // About section (specifications only)
+    private var aboutSection: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            specificationsSection
         }
     }
-    
-    // MARK: - Car Specifications Section
-    private var carSpecificationsSection: some View {
-        ProfileSection(title: "Car Specifications") {
-            VStack(spacing: 0) {
-                ProfileMenuItem(
-                    icon: "car.fill",
-                    title: "Make & Model",
-                    subtitle: "\(car.make) \(car.model)",
-                    action: {}
-                )
-                
-                ProfileMenuItem(
-                    icon: "calendar",
-                    title: "Year",
-                    subtitle: "\(car.year)",
-                    action: {}
-                )
-                
-                ProfileMenuItem(
-                    icon: "paintbrush.fill",
-                    title: "Color",
-                    subtitle: car.color,
-                    action: {}
-                )
-                
-                ProfileMenuItem(
-                    icon: "number",
-                    title: "License Plate",
-                    subtitle: car.licensePlate,
-                    action: {}
-                )
-                
-                ProfileMenuItem(
-                    icon: "gearshift",
-                    title: "Transmission",
-                    subtitle: car.transmissionType,
-                    action: {}
-                )
-                
-                ProfileMenuItem(
-                    icon: "fuelpump.fill",
-                    title: "Fuel Type",
-                    subtitle: car.fuelType,
-                    action: {}
-                )
-                
-                ProfileMenuItem(
-                    icon: "person.3.fill",
-                    title: "Seat Count",
-                    subtitle: "\(car.seatCount) seats",
-                    action: {}
-                )
-                
-                ProfileMenuItem(
-                    icon: car.vehicleType.icon,
-                    title: "Vehicle Type",
-                    subtitle: car.vehicleType.displayName,
-                    action: {}
-                )
+
+    private var specificationsSection: some View {
+        VStack(alignment: .leading) {
+            Text("Specifications")
+                .font(.title2)
+                .fontWeight(.bold)
+            HStack(spacing: 16) {
+                SpecificationIcon(icon: "person.3.fill", text: "\(car.seatCount) Seats")
+                SpecificationIcon(icon: "bolt.fill", text: car.transmissionType)
+                SpecificationIcon(icon: "fuelpump.fill", text: car.fuelType)
             }
         }
     }
-    
-    // MARK: - Owner Information Section
-    private var ownerInformationSection: some View {
-        ProfileSection(title: "Owner Information") {
-            VStack(spacing: 0) {
-                if let owner = car.owner {
-                    ProfileMenuItem(
-                        icon: "person.circle.fill",
-                        title: "Owner",
-                        subtitle: owner.displayName,
-                        action: {}
-                    )
-                    
-                    ProfileMenuItem(
-                        icon: "envelope.fill",
-                        title: "Email",
-                        subtitle: owner.email,
-                        action: {}
-                    )
-                    
-                    if let phone = owner.phoneNumber {
-                        ProfileMenuItem(
-                            icon: "phone.fill",
-                            title: "Phone",
-                            subtitle: phone,
-                            action: {}
-                        )
+
+    // Gallery section
+    private var gallerySection: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))]) {
+                ForEach(car.images, id: \.self) { imageUrl in
+                    AsyncImage(url: URL(string: imageUrl)) { image in
+                        image.resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 120)
+                            .clipped()
+                            .cornerRadius(10)
+                    } placeholder: {
+                        Color.gray.frame(height: 120)
+                            .cornerRadius(10)
                     }
-                } else {
-                    ProfileMenuItem(
-                        icon: "person.circle.fill",
-                        title: "Owner",
-                        subtitle: "Information not available",
-                        action: {}
-                    )
                 }
             }
         }
     }
-    
-    // MARK: - Location Details Section
-    private var locationDetailsSection: some View {
-        ProfileSection(title: "Location Details") {
-            VStack(spacing: 0) {
-                if let location = car.location {
-                    ProfileMenuItem(
-                        icon: "location.fill",
-                        title: "Pickup Location",
-                        subtitle: location.address,
-                        action: {}
-                    )
-                    
-                    ProfileMenuItem(
-                        icon: "mappin.circle.fill",
-                        title: "Coordinates",
-                        subtitle: "\(location.latitude), \(location.longitude)",
-                        action: {}
-                    )
-                } else {
-                    ProfileMenuItem(
-                        icon: "location.fill",
-                        title: "Location",
-                        subtitle: "Location information not available",
-                        action: {}
-                    )
+
+    // Review section
+    private var reviewSection: some View {
+        VStack {
+            let reviews = car.reviews ?? []
+            if reviews.isEmpty {
+                Text("No reviews yet.")
+                    .foregroundColor(.gray)
+                    .padding()
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 15) {
+                        ForEach(reviews) { review in
+                            ReviewRow(review: review)
+                        }
+                    }
                 }
             }
         }
     }
-    
-    // MARK: - Reviews Section
-    private var reviewsSection: some View {
-        ProfileSection(title: "Reviews & Ratings") {
-            VStack(spacing: 0) {
+
+    // Review row component (nested)
+    struct ReviewRow: View {
+        let review: Review
+        var body: some View {
+            VStack(alignment: .leading, spacing: 5) {
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Average Rating")
+                    AsyncImage(url: URL(string: review.author?.profilePicture ?? "")) { image in
+                        image.resizable().aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Image(systemName: "person.crop.circle.fill").resizable()
+                    }
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+
+                    VStack(alignment: .leading) {
+                        Text(review.author?.displayName ?? "Anonymous")
                             .font(.headline)
-                            .fontWeight(.semibold)
-                        
                         HStack(spacing: 4) {
                             ForEach(0..<5) { index in
-                                Image(systemName: index < Int(car.averageRating) ? "star.fill" : "star")
+                                Image(systemName: index < review.rating ? "star.fill" : "star")
                                     .foregroundColor(.yellow)
-                                    .font(.caption)
                             }
-                            
-                            Text(String(format: "%.1f", car.averageRating))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
                         }
                     }
-                    
                     Spacer()
-                    
-                    Text("\(car.reviewIds?.count ?? 0) reviews")
+                    Text(review.createdAt, style: .date)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-                
-                if let reviews = car.reviewIds, !reviews.isEmpty {
-                    ProfileMenuItem(
-                        icon: "text.bubble.fill",
-                        title: "View All Reviews",
-                        subtitle: "Read what others say about this car",
-                        action: {
-                            // Navigate to reviews
-                        }
-                    )
-                } else {
-                    ProfileMenuItem(
-                        icon: "text.bubble",
-                        title: "No Reviews Yet",
-                        subtitle: "Be the first to review this car",
-                        action: {}
-                    )
-                }
-            }
-        }
-    }
-    
-    // MARK: - Pricing Section
-    private var pricingSection: some View {
-        ProfileSection(title: "Pricing & Availability") {
-            VStack(spacing: 0) {
-                ProfileMenuItem(
-                    icon: "dollarsign.circle.fill",
-                    title: "Daily Rate",
-                    subtitle: car.priceFormatted,
-                    action: {}
-                )
-                
-                ProfileMenuItem(
-                    icon: "calendar.badge.clock",
-                    title: "Availability",
-                    subtitle: car.isAvailable ? "Available for booking" : "Currently rented",
-                    action: {}
-                )
-                
-                if !car.features.isEmpty {
-                    ProfileMenuItem(
-                        icon: "checkmark.circle.fill",
-                        title: "Features",
-                        subtitle: car.features.joined(separator: ", "),
-                        action: {}
-                    )
-                }
-            }
-        }
-    }
-    
-    // MARK: - Booking Button
-    private var bookingButton: some View {
-        VStack(spacing: 0) {
-            Divider()
-            
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Total Price")
-                        .font(.caption)
+                if let comment = review.comment, !comment.isEmpty {
+                    Text(comment)
                         .foregroundColor(.secondary)
-                    
-                    Text(car.priceFormatted)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
                 }
-                
-                Spacer()
-                
-                Button {
-                    showingBookingView = true
-                } label: {
-                    Text("Book Now")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(width: 120, height: 50)
-                        .background(car.isAvailable ? Color.blue : Color.gray)
-                        .clipShape(Capsule())
-                }
-                .disabled(!car.isAvailable)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            .background(Color(.systemBackground))
+            .padding()
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(10)
+        }
+    }
+
+    // Booking footer
+    private var bookingFooter: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text("Price")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.8))
+                Text(car.priceFormatted)
+                    .font(.title2)
+                    .fontWeight(.bold)
+            }
+            .foregroundColor(.white)
+
+            Spacer()
+
+            Button(action: { showingBookingView = true }) {
+                Text("Book Now")
+                    .fontWeight(.semibold)
+                    .foregroundColor(.black)
+                    .padding()
+                    .background(Color(red: 0.8, green: 1.0, blue: 0.0))
+                    .clipShape(Capsule())
+            }
+        }
+        .padding()
+        .background(Color.black)
+        .clipShape(Capsule())
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+        .sheet(isPresented: $showingBookingView) {
+            BookingView(car: car)
+                .environmentObject(authModel)
         }
     }
 }
 
-// MARK: - Car Image Gallery
-struct CarImageGallery: View {
-    let images: [String]
-    @Binding var selectedIndex: Int
+struct DraggableView<Content: View>: View {
+    @GestureState private var dragOffset = CGSize.zero
+    @State private var position = CGSize.zero
+    
+    let geometry: GeometryProxy
+    let content: Content
+    
+    init(geometry: GeometryProxy, @ViewBuilder content: () -> Content) {
+        self.geometry = geometry
+        self.content = content()
+    }
     
     var body: some View {
-        ZStack {
-            if images.isEmpty {
-                // Placeholder
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .overlay(
-                        VStack {
-                            Image(systemName: "car.fill")
-                                .font(.system(size: 60))
-                                .foregroundColor(.gray)
-                            Text("No images available")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        }
-                    )
-            } else {
-                if #available(iOS 17.0, *) {
-                    TabView(selection: $selectedIndex) {
-                        ForEach(Array(images.enumerated()), id: \.offset) { index, imageUrl in
-                            AsyncImage(url: URL(string: imageUrl)) { image in
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            } placeholder: {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .overlay(
-                                        ProgressView()
-                                            .scaleEffect(1.5)
-                                    )
-                            }
-                            .tag(index)
-                        }
-                    }
-                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
-                } else {
-                    // Fallback for iOS 16 and earlier
-                    AsyncImage(url: URL(string: images[selectedIndex])) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .overlay(
-                                ProgressView()
-                                    .scaleEffect(1.5)
-                            )
-                    }
-                }
-            }
+        VStack {
+            Capsule()
+                .frame(width: 40, height: 6)
+                .foregroundColor(.gray)
+                .padding(.vertical, 10)
             
-            // Image counter
-            VStack {
-                HStack {
-                    Spacer()
-                    
-                    Text("\(selectedIndex + 1)/\(images.count)")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.black.opacity(0.6))
-                        .clipShape(Capsule())
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                
-                Spacer()
-            }
+            content
+            
+            Spacer()
         }
+        .frame(width: geometry.size.width, height: geometry.size.height)
+        .background(Color(UIColor.systemGroupedBackground))
+        .cornerRadius(50)
+        .shadow(radius: 20)
+        .offset(y: self.position.height + self.dragOffset.height + geometry.size.height * 0.35)
+        .gesture(
+            DragGesture()
+                .updating($dragOffset, body: { (value, state, _) in
+                    state = value.translation
+                })
+                .onEnded({ value in
+                    let dragHeight = value.translation.height
+                    let screenHeight = geometry.size.height
+                    
+                    if dragHeight < -screenHeight * 0.1 {
+                        self.position.height = -screenHeight * 0.4
+                    } else if dragHeight > screenHeight * 0.1 {
+                        self.position.height = 0
+                    }
+                })
+        )
+        .animation(.interactiveSpring(), value: position)
+        .animation(.interactiveSpring(), value: dragOffset)
     }
 }
 
@@ -474,4 +315,21 @@ struct CarImageGallery: View {
     mockAuthModel.isPreview = true
     return CarDetailView(car: Car.sampleCar)
         .environmentObject(mockAuthModel)
+}
+
+struct SpecificationIcon: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        VStack {
+            Image(systemName: icon)
+                .font(.title2)
+                .padding()
+                .background(Color.gray.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            Text(text)
+                .font(.caption)
+        }
+    }
 }

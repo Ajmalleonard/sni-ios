@@ -196,9 +196,9 @@ struct SearchView: View {
                 Text("Please allow location access to see your position on the map and find nearby rentals.")
             }
             .sheet(isPresented: $showingSearchScreen) {
-                SearchScreen(
+                SheetSearchScreen(
                     onRouteSelected: { fromLocation, toLocation in
-                        // Create route info (in real app, this would come from routing API)
+                        // Create route info from selected locations
                         let route = RouteInfo(
                             fromLocation: fromLocation,
                             toLocation: toLocation,
@@ -212,8 +212,8 @@ struct SearchView: View {
                         showRouteOverlay = true
                         showingSearchScreen = false
                         
-                        // Hide bottom sheet when showing route
-                        
+                        // Optional: Update map position to show route
+                        // mapPosition = ... (calculate center of route)
                     },
                     isPreview: authModel.isPreview
                 )

@@ -272,12 +272,10 @@ struct Review: Identifiable, Codable, Sendable {
             // Try decoding as timestamp
             let timestamp = try container.decode(Double.self, forKey: key)
             return Date(timeIntervalSince1970: timestamp)
-        }
+        } 
     }
     
-    // Computed properties to avoid circular references
-    var car: Car? { nil } // Will be populated separately if needed
-    var rental: Rental? { nil } // Will be populated separately if needed
+    // Removed invalid computed properties block
 }
 
 // MARK: - Rental Model
@@ -435,7 +433,7 @@ enum RentalStatus: String, Codable, Sendable {
 }
 
 // MARK: - Updated Car Model (replaces CarDisplay)
-nonisolated struct Car: Identifiable, Codable, Sendable {
+nonisolated struct Car: Identifiable, Codable, Sendable, Hashable {
     let id: String
     let make: String
     let model: String
@@ -495,6 +493,15 @@ nonisolated struct Car: Identifiable, Codable, Sendable {
         self.location = location
         self.reviewIds = reviewIds
         self.rentalIds = rentalIds
+    }
+
+    // MARK: - Hashable Conformance
+    static func == (lhs: Car, rhs: Car) -> Bool {
+        return lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
     
     init(from decoder: Decoder) throws {
@@ -800,4 +807,10 @@ enum VehicleTypeFilter: String, CaseIterable {
         case .longVehicle: return .longVehicle
         }
     }
+}
+
+// Ensure Car can be used with NavigationLink(value:) and NavigationStack path
+extension Car: Hashable {
+    public static func == (lhs: Car, rhs: Car) -> Bool { lhs.id == rhs.id }
+    public func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }

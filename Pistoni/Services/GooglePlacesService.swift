@@ -28,11 +28,13 @@ class GooglePlacesService: ObservableObject {
         types: String? = nil
     ) async throws -> [PlacePrediction] {
         guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            print("🔍 Empty query, returning empty results")
             return []
         }
         
         // Return mock data in preview mode
         if isPreview {
+            print("🎭 Preview mode: returning mock data")
             return getMockPlacePredictions(query: query)
         }
         
@@ -45,9 +47,10 @@ class GooglePlacesService: ObservableObject {
         }
         
         print("🌍 Google Places API Request:")
-        print("   Query: \(query)")
+        print("   Query: '\(query)'")
         print("   Location: \(location?.latitude ?? 0), \(location?.longitude ?? 0)")
         print("   API Key: \(apiKey.prefix(10))...")
+        print("   Types: \(types ?? "none")")
         
         var components = URLComponents(string: "\(baseURL)/place/autocomplete/json")
         var queryItems = [
@@ -72,24 +75,47 @@ class GooglePlacesService: ObservableObject {
         components?.queryItems = queryItems
         
         guard let url = components?.url else {
+            print("❌ Failed to create URL")
             throw SearchError.invalidQuery
         }
         
+        print("🔗 Request URL: \(url.absoluteString)")
+        
         do {
+            print("📡 Making network request...")
             let (data, response) = try await session.data(from: url)
+            
+            print("📥 Response received")
+            print("   Data size: \(data.count) bytes")
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("   Status code: \(httpResponse.statusCode)")
+                print("   Headers: \(httpResponse.allHeaderFields)")
+            }
             
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
+                print("❌ Bad HTTP response: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
                 throw SearchError.networkError(URLError(.badServerResponse))
+            }
+            
+            // Log raw response for debugging
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📄 Raw response: \(responseString.prefix(500))...")
             }
             
             let autocompleteResponse = try JSONDecoder().decode(AutocompleteResponse.self, from: data)
             
+            print("✅ Successfully decoded response")
+            print("   Status: \(autocompleteResponse.status)")
+            print("   Predictions count: \(autocompleteResponse.predictions.count)")
+            
             if autocompleteResponse.status != "OK" && autocompleteResponse.status != "ZERO_RESULTS" {
+                print("❌ Google Places API error: \(autocompleteResponse.status)")
                 throw SearchError.googlePlacesError(autocompleteResponse.status)
             }
             
-            return autocompleteResponse.predictions.map { prediction in
+            let predictions = autocompleteResponse.predictions.map { prediction in
                 PlacePrediction(
                     placeId: prediction.placeId,
                     description: prediction.description,
@@ -99,7 +125,14 @@ class GooglePlacesService: ObservableObject {
                 )
             }
             
+            print("🎯 Returning \(predictions.count) predictions")
+            return predictions
+            
+        } catch let decodingError as DecodingError {
+            print("❌ JSON Decoding error: \(decodingError)")
+            throw SearchError.networkError(decodingError)
         } catch {
+            print("❌ Network error: \(error)")
             throw SearchError.networkError(error)
         }
     }

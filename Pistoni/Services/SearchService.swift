@@ -50,6 +50,12 @@ class SearchService: ObservableObject {
         userId: String,
         userLocation: CLLocationCoordinate2D? = nil
     ) {
+        print("🔍 SearchService.searchWithDebounce called with query: '\(query)'")
+        print("   Search type: \(searchType)")
+        print("   User ID: \(userId)")
+        print("   User location: \(String(describing: userLocation))")
+        print("   Is preview: \(isPreview)")
+        
         // Cancel previous timer
         searchDebounceTimer?.invalidate()
         
@@ -59,6 +65,7 @@ class SearchService: ObservableObject {
         
         // Clear predictions if query is empty
         if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            print("   ❌ Empty query, clearing predictions")
             searchState.predictions = []
             searchState.isSearching = false
             return
@@ -66,6 +73,7 @@ class SearchService: ObservableObject {
         
         // Skip network calls in preview mode
         if isPreview {
+            print("   ⚠️ Preview mode - skipping network calls")
             // Use the mock data already set up in setupPreviewData()
             // Just simulate a short delay for UI feedback
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
@@ -76,11 +84,14 @@ class SearchService: ObservableObject {
         }
         
         // Set loading state
+        print("   ⏳ Setting loading state")
         searchState.isSearching = true
         isLoading = true
         
         // Create debounced search timer
+        print("   ⏰ Creating debounced timer with delay: \(debounceDelay)s")
         searchDebounceTimer = Timer.scheduledTimer(withTimeInterval: debounceDelay, repeats: false) { [weak self] _ in
+            print("   🚀 Timer fired - calling performSearch")
             Task {
                 await self?.performSearch(
                     query: query,
@@ -99,13 +110,17 @@ class SearchService: ObservableObject {
         userId: String,
         userLocation: CLLocationCoordinate2D?
     ) async {
+        print("🔍 SearchService.performSearch called with query: '\(query)'")
+        
         do {
             let startTime = Date()
             
             // Get place types for this search context
             let placeTypes = GooglePlacesService.getPlaceTypes(for: searchType)
+            print("   📍 Place types for search: \(placeTypes)")
             
             // Fetch predictions from Google Places API
+            print("   🌐 Calling googlePlacesService.fetchPlacePredictions...")
             let predictions = try await googlePlacesService.fetchPlacePredictions(
                 query: query,
                 location: userLocation,
@@ -113,13 +128,16 @@ class SearchService: ObservableObject {
             )
             
             let searchDuration = Date().timeIntervalSince(startTime)
+            print("   ✅ Received \(predictions.count) predictions in \(searchDuration)s")
             
             // Update UI on main thread
             await MainActor.run {
+                print("   🔄 Updating UI with \(predictions.count) predictions")
                 searchState.predictions = predictions
                 searchState.isSearching = false
                 searchState.errorMessage = nil
                 isLoading = false
+                print("   ✅ UI updated successfully")
             }
             
             // Save search query to backend (non-confirmed search)
@@ -140,6 +158,7 @@ class SearchService: ObservableObject {
             await saveSearchToBackend(searchQuery)
             
         } catch {
+            print("   ❌ SearchService.performSearch error: \(error)")
             await MainActor.run {
                 searchState.isSearching = false
                 searchState.errorMessage = error.localizedDescription

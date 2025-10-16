@@ -14,38 +14,38 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            //            if authModel.currentUser != nil {
-            // User is logged in - show main app with tab navigation
+                        if authModel.currentUser != nil {
+             //User is logged in - show main app with tab navigation
             mainAppView()
-            //            } else if showSplash {
-            //                // Show splash screen
-            //                SplashScreen {
-            //                    showSplash = false
-            //                    if hasSeenOnboarding {
-            //                        showAuthChoice = true
-            //                    } else {
-            //                        showOnboarding = true
-            //                    }
-            //                }
-            //            } else if showOnboarding {
-            //                // Show onboarding for new users
-            //                OnboardingView {
-            //                    UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-            //                    showOnboarding = false
-            //                    showAuthChoice = true
-            //                }
-            //            } else if showAuthChoice {
-            //                // Show auth choice screen
-            //                AuthChoiceView(
-            //                    onRegisterTapped: {
-            //                        // Navigation handled within RegisterView
-            //                    },
-            //                    onLoginTapped: {
-            //                        // Navigation handled within LoginView
-            //                    }
-            //                )
-            //                .environmentObject(authModel)
-            //            }
+                        } else if showSplash {
+                            // Show splash screen
+                            SplashScreen {
+                                showSplash = false
+                                if hasSeenOnboarding {
+                                    showAuthChoice = true
+                                } else {
+                                    showOnboarding = true
+                                }
+                            }
+                        } else if showOnboarding {
+                            // Show onboarding for new users
+                            OnboardingView {
+                                UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
+                                showOnboarding = false
+                                showAuthChoice = true
+                            }
+                        } else if showAuthChoice {
+                            // Show auth choice screen
+                            AuthChoiceView(
+                                onRegisterTapped: {
+                                    // Navigation handled within RegisterView
+                                },
+                                onLoginTapped: {
+                                    // Navigation handled within LoginView
+                                }
+                            )
+                            .environmentObject(authModel)
+                        }
         }
         .animation(.easeInOut(duration: 0.2), value: authModel.currentUser?.id)
         
@@ -59,8 +59,12 @@ struct ContentView: View {
             Tab.init("Home", systemImage: AppTab.home.icon){
                 NavigationStack{
                     HomeView()
-                }.navigationTitle("Home")
-                    .safeAreaPadding(.bottom,safeAreaBottomPadding)
+                        .navigationDestination(for: Car.self) { car in
+                            CarDetailView(car: car)
+                        }
+                }
+                .navigationTitle("Home")
+                .safeAreaPadding(.bottom,safeAreaBottomPadding)
             }
             Tab.init("Explore", systemImage: AppTab.explore.icon){
                 NavigationStack{
@@ -80,14 +84,15 @@ struct ContentView: View {
                 }.navigationTitle("Profile")
                     .safeAreaPadding(.bottom,safeAreaBottomPadding)
             }
-            Tab.init("Home", systemImage: AppTab.search.icon, role: .search){
+            Tab.init("Search", systemImage: AppTab.search.icon, role: .search){
                 NavigationStack{
-                    SearchScreen()
+                    PageSearchScreen(searchText: $searchText)
                 }.navigationTitle("Search")
                     .searchable(text: $searchText)
                  .safeAreaPadding(.bottom,safeAreaBottomPadding)
             }
         }.accentColor(.red).background(.white)
+            .environmentObject(authModel)
     }
     
     

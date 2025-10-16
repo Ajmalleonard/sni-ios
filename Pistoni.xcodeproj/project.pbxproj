@@ -11,6 +11,7 @@
 		A15BC7892E22301600318CCE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7882E22301600318CCE /* FirebaseCore */; };
 		A15BC7942E224DFF00318CCE /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7932E224DFF00318CCE /* GoogleSignIn */; };
 		A15BC7962E224DFF00318CCE /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7952E224DFF00318CCE /* GoogleSignInSwift */; };
+		A15F68602E7F780000D4497C /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A15F685F2E7F780000D4497C /* UserNotifications.framework */; };
 		A1781FBA2E26DDF2005140F1 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A1781FB92E26DDF2005140F1 /* FirebaseFirestore */; };
 		A18D7F1E2E6345D4007F3BCA /* GooglePlaces in Frameworks */ = {isa = PBXBuildFile; productRef = A18D7F1D2E6345D4007F3BCA /* GooglePlaces */; };
 		A18D7F202E6345D4007F3BCA /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A18D7F1F2E6345D4007F3BCA /* GooglePlacesSwift */; };
@@ -19,21 +20,22 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		CEC880222E182B79009D61FD /* SNI Rentals.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SNI Rentals.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A15F685F2E7F780000D4497C /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
+		CEC880222E182B79009D61FD /* Pistoni.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pistoni.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A15FBC4A2E705F16004948E2 /* Exceptions for "Pistoni" folder in "SNI Rentals" target */ = {
+		A15FBC4A2E705F16004948E2 /* Exceptions for "Pistoni" folder in "Pistoni" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Extensions/CodeKit.json,
 			);
-			target = CEC880212E182B79009D61FD /* SNI Rentals */;
+			target = CEC880212E182B79009D61FD /* Pistoni */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		A15FBC4B2E705F16004948E2 /* Exceptions for "Pistoni" folder in "Compile Sources" phase from "SNI Rentals" target */ = {
+		A15FBC4B2E705F16004948E2 /* Exceptions for "Pistoni" folder in "Compile Sources" phase from "Pistoni" target */ = {
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			buildPhase = CEC8801E2E182B79009D61FD /* Sources */;
 			membershipExceptions = (
@@ -46,8 +48,8 @@
 		CEC880242E182B79009D61FD /* Pistoni */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				A15FBC4A2E705F16004948E2 /* Exceptions for "Pistoni" folder in "SNI Rentals" target */,
-				A15FBC4B2E705F16004948E2 /* Exceptions for "Pistoni" folder in "Compile Sources" phase from "SNI Rentals" target */,
+				A15FBC4A2E705F16004948E2 /* Exceptions for "Pistoni" folder in "Pistoni" target */,
+				A15FBC4B2E705F16004948E2 /* Exceptions for "Pistoni" folder in "Compile Sources" phase from "Pistoni" target */,
 			);
 			path = Pistoni;
 			sourceTree = "<group>";
@@ -59,6 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A15F68602E7F780000D4497C /* UserNotifications.framework in Frameworks */,
 				A15BC7892E22301600318CCE /* FirebaseCore in Frameworks */,
 				A1F9A4EE2E4BBB9C0054F4F9 /* SocketIO in Frameworks */,
 				A18D7F1E2E6345D4007F3BCA /* GooglePlaces in Frameworks */,
@@ -77,6 +80,7 @@
 		A198C2422E32B7DD006E1614 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A15F685F2E7F780000D4497C /* UserNotifications.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -93,7 +97,7 @@
 		CEC880232E182B79009D61FD /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CEC880222E182B79009D61FD /* SNI Rentals.app */,
+				CEC880222E182B79009D61FD /* Pistoni.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -101,9 +105,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		CEC880212E182B79009D61FD /* SNI Rentals */ = {
+		CEC880212E182B79009D61FD /* Pistoni */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CEC8802F2E182B7C009D61FD /* Build configuration list for PBXNativeTarget "SNI Rentals" */;
+			buildConfigurationList = CEC8802F2E182B7C009D61FD /* Build configuration list for PBXNativeTarget "Pistoni" */;
 			buildPhases = (
 				CEC8801E2E182B79009D61FD /* Sources */,
 				CEC8801F2E182B79009D61FD /* Frameworks */,
@@ -116,7 +120,7 @@
 			fileSystemSynchronizedGroups = (
 				CEC880242E182B79009D61FD /* Pistoni */,
 			);
-			name = "SNI Rentals";
+			name = Pistoni;
 			packageProductDependencies = (
 				A15BC7862E22301600318CCE /* FirebaseAuth */,
 				A15BC7882E22301600318CCE /* FirebaseCore */,
@@ -129,7 +133,7 @@
 				A18D7F222E634984007F3BCA /* GoogleMaps */,
 			);
 			productName = "SNI Rentals";
-			productReference = CEC880222E182B79009D61FD /* SNI Rentals.app */;
+			productReference = CEC880222E182B79009D61FD /* Pistoni.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -147,7 +151,7 @@
 					};
 				};
 			};
-			buildConfigurationList = CEC8801D2E182B79009D61FD /* Build configuration list for PBXProject "SNI Rentals" */;
+			buildConfigurationList = CEC8801D2E182B79009D61FD /* Build configuration list for PBXProject "Pistoni" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -168,7 +172,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				CEC880212E182B79009D61FD /* SNI Rentals */,
+				CEC880212E182B79009D61FD /* Pistoni */,
 			);
 		};
 /* End PBXProject section */
@@ -247,7 +251,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -305,7 +309,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -320,7 +324,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "SNI Rentals/SNI Rentals.entitlements";
+				CODE_SIGN_ENTITLEMENTS = Pistoni/Pistoni.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -328,9 +332,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "SNI-Rentals-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "SNI Rentals";
+				INFOPLIST_KEY_CFBundleDisplayName = Pistoni;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "SNI Rentals needs your location to show nearby vehicles, provide directions, and track your rental journey.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Pistoni needs your location to show nearby vehicles, provide directions, and track your rental journey.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SNI Rentals needs your location to show nearby vehicles and provide directions.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -360,7 +364,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "SNI Rentals/SNI Rentals.entitlements";
+				CODE_SIGN_ENTITLEMENTS = Pistoni/Pistoni.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -368,9 +372,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "SNI-Rentals-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "SNI Rentals";
+				INFOPLIST_KEY_CFBundleDisplayName = Pistoni;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "SNI Rentals needs your location to show nearby vehicles, provide directions, and track your rental journey.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Pistoni needs your location to show nearby vehicles, provide directions, and track your rental journey.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SNI Rentals needs your location to show nearby vehicles and provide directions.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -398,7 +402,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		CEC8801D2E182B79009D61FD /* Build configuration list for PBXProject "SNI Rentals" */ = {
+		CEC8801D2E182B79009D61FD /* Build configuration list for PBXProject "Pistoni" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CEC8802D2E182B7C009D61FD /* Debug */,
@@ -407,7 +411,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CEC8802F2E182B7C009D61FD /* Build configuration list for PBXNativeTarget "SNI Rentals" */ = {
+		CEC8802F2E182B7C009D61FD /* Build configuration list for PBXNativeTarget "Pistoni" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CEC880302E182B7C009D61FD /* Debug */,

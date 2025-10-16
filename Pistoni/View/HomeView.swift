@@ -49,23 +49,8 @@ struct HomeView: View {
             }
         }
         .toolbar{
-            ToolbarItem(placement: .topBarTrailing){
-                Button {
-                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                        showSearch = true
-                    }
-                } label: {
-                    Image("search")
-                        .resizable()
-                        .renderingMode(.template)
-                        .foregroundColor(Color("Secondary"))
-                        .frame(width: 20, height: 20)
-                        .padding(12)
-                        .background(Color.gray.opacity(0.2))
-                        .clipShape(Circle())
-                }
+            ToolbarItemGroup(placement: .topBarTrailing){
                 
-                // Notification Button
                 Button {
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                         showNotifications = true
@@ -78,7 +63,7 @@ struct HomeView: View {
                             .foregroundColor(Color("Secondary"))
                             .frame(width: 20, height: 20)
                             .padding(12)
-                            .background(Color.gray.opacity(0.2))
+                        
                             .clipShape(Circle())
                         
                         // Notification Badge
@@ -91,14 +76,12 @@ struct HomeView: View {
                         }
                     }
                 }
-            }
-        }
+                
+                
+                
+            }}
         .sheet(isPresented: $showScheduleTrip) {
             ScheduleTripView()
-        }
-        .sheet(isPresented: $showSearch) {
-            SearchScreen()
-                .environmentObject(authModel)
         }
         .fullScreenCover(
             isPresented: $showNotifications,
@@ -158,12 +141,15 @@ struct HomeView: View {
                 .padding(.vertical, 40)
             } else {
                 ForEach(Array(filteredCars.enumerated()), id: \.element.id) { index, car in
-                    VStack(spacing: 16) {
-                        CarListItem(car: car) {
-                            // Handle car selection
-                            print("Selected car: \(car.displayName)")
+                    NavigationLink(value: car) {
+                        VStack(spacing: 16) {
+                            CarListItem(car: car) {
+                                // Optional: handle auxiliary actions (e.g., Book Now)
+                            }
                         }
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
         }
