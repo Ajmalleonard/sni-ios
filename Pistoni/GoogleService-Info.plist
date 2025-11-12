@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>924727721829-31o1og730ceh5o7084epg3ioaumndrca.apps.googleusercontent.com</string>
+	<string>924727721829-2mbr2n6obgnrtasivqta42eu27e3a2ir.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.924727721829-31o1og730ceh5o7084epg3ioaumndrca</string>
+	<string>com.googleusercontent.apps.924727721829-2mbr2n6obgnrtasivqta42eu27e3a2ir</string>
 	<key>API_KEY</key>
 	<string>AIzaSyAQ_RsdPqk05NCuv6Yl1mSleHabVmV4L9k</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.sni.rentals</string>
+	<string>com.pistoni.app</string>
 	<key>PROJECT_ID</key>
 	<string>org-transpota-app</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:924727721829:ios:dab95db63b0e934b1beb8c</string>
+	<string>1:924727721829:ios:89369b193b1604fa1beb8c</string>
 </dict>
 </plist>

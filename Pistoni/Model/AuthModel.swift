@@ -88,19 +88,41 @@ class AuthModel: ObservableObject {
         }
     }
     
+    
+    
     func signInWithGoogle() {
         guard !isPreview else { return }
         performAuthOperation { [weak self] in
             await self?.handleGoogleSignIn()
         }
     }
-    
-    func signInWithApple() {
+
+    func signInWithApple(appleOAuthDto: AppleOAuthDto, completion: @escaping (Result<LoginResponse, Error>) -> Void) {
         guard !isPreview else { return }
-        performAuthOperation { [weak self] in
-            await self?.handleAppleSignIn()
+        
+        // Call the AuthService to perform the backend request
+        authService.signInWithApple(appleOAuthDto: appleOAuthDto) { result in
+            Task { @MainActor in
+                switch result {
+                case .success(let response):
+                    self.authState = AuthState(
+                        currentUser: response.user,
+                        accessToken: response.accessToken,
+                        refreshToken: response.refreshToken
+                    )
+                    self.messageState = MessageState.success("Apple Sign-In successful")
+                    self.saveAuthState()
+                    completion(.success(response))
+                    
+                case .failure(let error):
+                    self.messageState = MessageState.error(self.parseErrorMessage(error))
+                    completion(.failure(error))
+                }
+            }
         }
     }
+    
+ 
     
     func requestEmailVerification(email: String) {
         performAuthOperation { [weak self] in
@@ -164,7 +186,7 @@ class AuthModel: ObservableObject {
     }
     
     private func handleGoogleSignIn() async {
-        await withCheckedContinuation { continuation in
+        await withCheckedContinuation{ continuation in
             authService.signInWithGoogle { result in
                 Task { @MainActor in
                     switch result {
@@ -185,26 +207,9 @@ class AuthModel: ObservableObject {
             }
         }
     }
+
     
-    private func handleAppleSignIn() async {
-        do {
-            let response = try await authService.signInWithApple()
-            await MainActor.run {
-                self.authState = AuthState(
-                    currentUser: response.user,
-                    accessToken: response.accessToken,
-                    refreshToken: response.refreshToken
-                )
-                self.messageState = MessageState.success("Apple Sign-In successful")
-                self.saveAuthState()
-            }
-        } catch {
-            await MainActor.run {
-                self.messageState = MessageState.error(self.parseErrorMessage(error))
-            }
-        }
-    }
-    
+
     private func handleEmailVerification(email: String) async {
         await withCheckedContinuation { continuation in
             authService.requestEmailVerification(email: email) { result in

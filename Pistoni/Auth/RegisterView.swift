@@ -4,8 +4,12 @@
 //
 //  Created by Jesus on 7/5/25.
 //
-
 import SwiftUI
+import AuthenticationServices
+import Firebase
+import FirebaseAuth
+import CryptoKit
+
 
 struct RegisterView: View {
     @State var name : String = ""
@@ -16,24 +20,18 @@ struct RegisterView: View {
     @EnvironmentObject var authModel: AuthModel
     @Environment(\.dismiss) private var dismiss
     
+    @State var AuthErrorMessage: String = ""
+    @State var showAuthAlert: Bool = false
+    @State private var isLoading: Bool = false
+     @State private var nonce: String?
+    @AppStorage("log_Status") private var logStatus: Bool = false
+    
     var body: some View {
         ScrollView {
             ZStack {
-                Color("Primary").ignoresSafeArea()
+             
                 VStack(spacing: 32) {
-                    // Back Button
-                    HStack {
-                        Button(action: {
-                            dismiss()
-                        }) {
-                            Image(systemName: "chevron.left")
-                                .font(.title2)
-                                .foregroundColor(Color("Secondary"))
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal, 32)
-                    .padding(.top, 10)
+                
                     
                     VStack(alignment:.leading ,spacing: 2) {
                         
@@ -58,7 +56,35 @@ struct RegisterView: View {
 //                            .clipShape(Capsule())
 //                            .foregroundColor(Color("Secondary"))
 //                        }
+                        SignInWithAppleButton(.signIn){request in
+                            let nonce = randomNonceString()
+                            self.nonce = nonce
+                            
+                            
+                            request.requestedScopes = [.email, .fullName]
+                            request.nonce = sha256(nonce)
+                            
+                            
+                        }onCompletion: { result in
+                            switch result {
+                            case .success(let authorization):
+                                loginWithApple(authorization)
+                            case .failure(let error):
+                                showError(error.localizedDescription)
+                                
+                            }
+                            
+                            
+                        }.frame(minHeight: 55).clipShape(Capsule())
 //                        .disabled(authModel.isLoading)
+                        
+                        
+                        
+                        
+                  
+                        
+                        
+                       
                         
                         Button {
                             signInWithGoogle()
@@ -83,6 +109,7 @@ struct RegisterView: View {
                         .disabled(authModel.isLoading)
                     }
                     .padding(.horizontal, 32)
+                
                     
                     // Or Divider
                     HStack {
@@ -114,17 +141,28 @@ struct RegisterView: View {
                         }.frame(maxWidth: .infinity)
                         
                         // Show verify button if in email step
-                        if authModel.registrationStep == .enterEmail {
-                            Button(action: verifyEmail) {
-                                Text("Create account")
-                                    .fontWeight(.semibold)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(20)
-                                    .background(Color("Secondary"))
-                                    .foregroundColor(Color("Primary"))
-                                    .clipShape(Capsule())
-                            }
-                            .disabled(!isValidEmail(email))
+//                        if authModel.registrationStep == .enterEmail {
+//                            Button(action: verifyEmail) {
+//                                Text("Create account")
+//                                    .fontWeight(.semibold)
+//                                    .frame(maxWidth: .infinity)
+//                                    .padding(20)
+//                                    .background(Color("Secondary"))
+//                                    .foregroundColor(Color("Primary"))
+//                                    .clipShape(Capsule())
+//                            }
+//                            .disabled(!isValidEmail(email))
+//                        }
+                        ProgressiveButton{
+                        }label: {
+                            Text("Create account")
+                               .fontWeight(.semibold)
+                               .frame(maxWidth: .infinity)
+                               .padding(20)
+                               .background(Color("Secondary"))
+                               .foregroundColor(Color("Primary"))
+                        } action: { isCancelled in
+                            verifyEmail()
                         }
                         
                         // Registration fields (animated in)
@@ -219,6 +257,9 @@ struct RegisterView: View {
             }
         }
         .navigationBarHidden(true)
+        .alert(AuthErrorMessage, isPresented: $showAuthAlert) {
+            Button("OK", role: .cancel) { }
+        }
         .sheet(isPresented: $showEmailVerification) {
             EmailVerificationView(email: email)
                 .environmentObject(authModel)
@@ -241,14 +282,100 @@ struct RegisterView: View {
         authModel.signInWithGoogle()
     }
     
-    private func signInWithApple() {
-        authModel.signInWithApple()
-    }
-    
     private func isValidEmail(_ email: String) -> Bool {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
         let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
         return emailPred.evaluate(with: email)
+    }
+    
+    func showError(_ message: String){
+        AuthErrorMessage = message
+        showAuthAlert.toggle()
+        isLoading = false
+    }
+    
+    private func randomNonceString(length: Int = 32) -> String {
+            precondition(length > 0)
+            var randomBytes = [UInt8](repeating: 0, count: length)
+            let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+            if errorCode != errSecSuccess {
+                fatalError(
+                    "Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)"
+                )
+            }
+            
+            let charset: [Character] =
+            Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+            
+            let nonce = randomBytes.map { byte in
+                // Pick a random character from the set, wrapping around if needed.
+                charset[Int(byte) % charset.count]
+            }
+            
+            return String(nonce)
+        }
+        
+        private func sha256(_ input: String) -> String {
+            let inputData = Data(input.utf8)
+            let hashedData = SHA256.hash(data: inputData)
+            let hashString = hashedData.compactMap {
+                String(format: "%02x", $0)
+            }.joined()
+            
+            return hashString
+        }
+    
+    func loginWithApple(_ authorization: ASAuthorization) {
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            showError("Apple Sign-In credential is not available.")
+            return
+        }
+        
+        guard self.nonce != nil else {
+            showError("Nonce is missing.")
+            return
+        }
+        
+        guard let appleIDToken = appleIDCredential.identityToken,
+              let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+            showError("Unable to get ID token from Apple credential.")
+            return
+        }
+        
+        guard let authorizationCode = appleIDCredential.authorizationCode,
+              let authCodeString = String(data: authorizationCode, encoding: .utf8) else {
+            showError("Unable to get authorization code from Apple credential.")
+            return
+        }
+        
+        let userIdentifier = appleIDCredential.user
+        let email = appleIDCredential.email
+        let fullName = appleIDCredential.fullName
+        
+        // Create the DTO for the backend
+        let appleOAuthDto = AppleOAuthDto(
+            identityToken: idTokenString,
+            authorizationCode: authCodeString,
+            email: email,
+            fullName: PersonNameComponentsDto(
+                givenName: fullName?.givenName,
+                familyName: fullName?.familyName
+            ),
+            userIdentifier: userIdentifier
+        )
+        
+        // Send the DTO to your backend
+        authModel.signInWithApple(appleOAuthDto: appleOAuthDto) { result in
+            switch result {
+            case .success(let loginResponse):
+                // Handle successful authentication
+                print("Successfully signed in with Apple: \(loginResponse.user)")
+                logStatus = true
+                dismiss()
+            case .failure(let error):
+                showError(error.localizedDescription)
+            }
+        }
     }
 }
 
@@ -264,4 +391,18 @@ struct Shake: GeometryEffect {
         let translation = 10 * sin(animatableData * .pi * 4)
         return ProjectionTransform(CGAffineTransform(translationX: translation, y: 0))
     }
+}
+
+// MARK: - DTOs for Backend Communication
+nonisolated struct AppleOAuthDto: Codable, Sendable {
+    let identityToken: String
+    let authorizationCode: String
+    let email: String?
+    let fullName: PersonNameComponentsDto?
+    let userIdentifier: String
+}
+
+nonisolated struct PersonNameComponentsDto: Codable, Sendable {
+    let givenName: String?
+    let familyName: String?
 }

@@ -16,81 +16,16 @@ struct CarDetailView: View {
     
     var body: some View {
   
-            ZStack(alignment: .bottom) {
-                // The background now consists of the image and a solid color, preventing a black screen.
-                Color(.black).ignoresSafeArea()
-                VStack(spacing: 0) {
-                    AsyncImage(url: URL(string: car.images.first ?? "")) { image in
-                        image.resizable()
-                            .scaledToFit()
-                            .frame(width: geometry.size.width, height: geometry.size.height * 0.45)
-                            .clipped()
-                    } placeholder: {
-                        Color.gray
-                            .frame(width: geometry.size.width, height: geometry.size.height * 0.45)
-                    }
-                    Color(UIColor.systemGroupedBackground)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: geometry.size.height * 0.45)
-                .frame(maxHeight: .infinity, alignment: .top)
-                
-
-                // Draggable details card
-                DraggableView(geometry: geometry) {
-                    VStack(alignment: .leading, spacing: 20) {
-                        header
-                        tabView
-                        
-                        if selectedTab == "About" {
-                            aboutSection
-                        } else if selectedTab == "Gallery" {
-                            gallerySection
-                        } else if selectedTab == "Review" {
-                            reviewSection
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 30)
-                }
-
-                // Header with back button, aligned to the top.
-                VStack {
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            Image(systemName: "arrow.left")
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.black.opacity(0.5))
-                                .clipShape(Circle())
-                        }
-                        Spacer()
-                        Text("Car Details")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    Spacer()
-                }
-                
-                // Booking footer is now correctly aligned to the bottom.
-                bookingFooter
-            }
-        
-            .ignoresSafeArea()
-        
     }
     
     private var header: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(car.displayName)
-                    .font(.largeTitle)
+                    .font(.title2)
                     .fontWeight(.bold)
                 Text(car.make)
-                    .font(.title3)
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
             }
             Spacer()
@@ -104,14 +39,13 @@ struct CarDetailView: View {
         }
     }
 
-    // Tabs header
     private var tabView: some View {
         HStack {
             ForEach(["About", "Gallery", "Review"], id: \.self) { tab in
                 Button(action: { selectedTab = tab }) {
                     Text(tab)
                         .fontWeight(.semibold)
-                        .foregroundColor(selectedTab == tab ? .white : .primary)
+                        .foregroundColor(selectedTab == tab ? .white : .secondary)
                         .padding(.vertical, 10)
                         .padding(.horizontal, 20)
                         .background(selectedTab == tab ? Color.black : Color.clear)
@@ -121,23 +55,25 @@ struct CarDetailView: View {
             Spacer()
         }
         .padding(4)
-        .background(Color.gray.opacity(0.1))
+        .background(Color.white.opacity(0.08))
         .clipShape(Capsule())
     }
 
-    // About section (specifications only)
     private var aboutSection: some View {
         VStack(alignment: .leading, spacing: 20) {
             specificationsSection
+            Text("This vehicle is well-maintained and ideal for city and highway drives. Enjoy great mileage, comfort, and safety features for your trip.")
+                .font(.footnote)
+                .foregroundColor(.secondary)
         }
     }
 
     private var specificationsSection: some View {
         VStack(alignment: .leading) {
             Text("Specifications")
-                .font(.title2)
+                .font(.headline)
                 .fontWeight(.bold)
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 SpecificationIcon(icon: "person.3.fill", text: "\(car.seatCount) Seats")
                 SpecificationIcon(icon: "bolt.fill", text: car.transmissionType)
                 SpecificationIcon(icon: "fuelpump.fill", text: car.fuelType)
@@ -145,7 +81,6 @@ struct CarDetailView: View {
         }
     }
 
-    // Gallery section
     private var gallerySection: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))]) {
@@ -153,11 +88,11 @@ struct CarDetailView: View {
                     AsyncImage(url: URL(string: imageUrl)) { image in
                         image.resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(height: 120)
+                            .frame(height: 100)
                             .clipped()
                             .cornerRadius(10)
                     } placeholder: {
-                        Color.gray.frame(height: 120)
+                        Color.gray.frame(height: 100)
                             .cornerRadius(10)
                     }
                 }
@@ -165,17 +100,24 @@ struct CarDetailView: View {
         }
     }
 
-    // Review section
     private var reviewSection: some View {
         VStack {
             let reviews = car.reviews ?? []
             if reviews.isEmpty {
-                Text("No reviews yet.")
-                    .foregroundColor(.gray)
-                    .padding()
+                VStack(alignment: .center) {
+                    Text("No reviews yet.")
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                }
+                .frame(maxWidth: .infinity)
+                .frame(maxHeight: .infinity)
+                .frame(alignment: .center)
+                .background(Color("Accent"))
+                .clipShape(Capsule())
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 15) {
+                    VStack(alignment: .leading, spacing: 10) {
                         ForEach(reviews) { review in
                             ReviewRow(review: review)
                         }
@@ -185,7 +127,6 @@ struct CarDetailView: View {
         }
     }
 
-    // Review row component (nested)
     struct ReviewRow: View {
         let review: Review
         var body: some View {
@@ -201,7 +142,7 @@ struct CarDetailView: View {
 
                     VStack(alignment: .leading) {
                         Text(review.author?.displayName ?? "Anonymous")
-                            .font(.headline)
+                            .font(.subheadline)
                         HStack(spacing: 4) {
                             ForEach(0..<5) { index in
                                 Image(systemName: index < review.rating ? "star.fill" : "star")
@@ -216,16 +157,16 @@ struct CarDetailView: View {
                 }
                 if let comment = review.comment, !comment.isEmpty {
                     Text(comment)
+                        .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
-            .padding()
-            .background(Color.gray.opacity(0.1))
+            .padding(8)
+            .background(Color.white.opacity(0.06))
             .cornerRadius(10)
         }
     }
 
-    // Booking footer
     private var bookingFooter: some View {
         HStack {
             VStack(alignment: .leading) {
@@ -261,55 +202,6 @@ struct CarDetailView: View {
     }
 }
 
-struct DraggableView<Content: View>: View {
-    @GestureState private var dragOffset = CGSize.zero
-    @State private var position = CGSize.zero
-    
-    let geometry: GeometryProxy
-    let content: Content
-    
-    init(geometry: GeometryProxy, @ViewBuilder content: () -> Content) {
-        self.geometry = geometry
-        self.content = content()
-    }
-    
-    var body: some View {
-        VStack {
-            Capsule()
-                .frame(width: 40, height: 6)
-                .foregroundColor(.gray)
-                .padding(.vertical, 10)
-            
-            content
-            
-            Spacer()
-        }
-        .frame(width: geometry.size.width, height: geometry.size.height)
-        .background(Color(UIColor.systemGroupedBackground))
-        .cornerRadius(50)
-        .shadow(radius: 20)
-        .offset(y: self.position.height + self.dragOffset.height + geometry.size.height * 0.35)
-        .gesture(
-            DragGesture()
-                .updating($dragOffset, body: { (value, state, _) in
-                    state = value.translation
-                })
-                .onEnded({ value in
-                    let dragHeight = value.translation.height
-                    let screenHeight = geometry.size.height
-                    
-                    if dragHeight < -screenHeight * 0.1 {
-                        self.position.height = -screenHeight * 0.4
-                    } else if dragHeight > screenHeight * 0.1 {
-                        self.position.height = 0
-                    }
-                })
-        )
-        .animation(.interactiveSpring(), value: position)
-        .animation(.interactiveSpring(), value: dragOffset)
-    }
-}
-
 #Preview {
     let mockAuthModel = AuthModel()
     mockAuthModel.isPreview = true
@@ -324,12 +216,13 @@ struct SpecificationIcon: View {
     var body: some View {
         VStack {
             Image(systemName: icon)
-                .font(.title2)
-                .padding()
+                .font(.headline)
+                .padding(8)
                 .background(Color.gray.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             Text(text)
-                .font(.caption)
+                .font(.caption2)
         }
     }
 }
+

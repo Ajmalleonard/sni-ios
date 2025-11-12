@@ -15,6 +15,8 @@ struct EnhancedChatView: View {
     
     var body: some View {
         VStack(spacing: 0) {
+         
+            
             if let manager = messagesManager {
                 if manager.selectedUser != nil {
                     // Chat interface
@@ -23,9 +25,6 @@ struct EnhancedChatView: View {
                     // User selection prompt
                     userSelectionPrompt(with: manager)
                 }
-            } else {
-                // Loading state
-                loadingView
             }
         }
         .onAppear {
@@ -54,19 +53,6 @@ struct EnhancedChatView: View {
     private func createManagerIfNeeded() {
         guard let currentUser = authModel.currentUser, messagesManager == nil else { return }
         messagesManager = EnhancedMessagesManager(currentUser: currentUser)
-    }
-    
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.5)
-            
-            Text("Loading Chat...")
-                .font(.headline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
     }
     
     private func userSelectionPrompt(with manager: EnhancedMessagesManager) -> some View {

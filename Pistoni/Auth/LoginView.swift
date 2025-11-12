@@ -1,48 +1,23 @@
-//
-//  LoginView.swift
-//  SNI Rentals
-//
-//  Created by Jesus on 7/5/25.
-//
-
 import SwiftUI
+import AuthenticationServices
+import CryptoKit
 
 struct LoginView: View {
     @State var email : String = ""
     @State var password : String = ""
     @EnvironmentObject var authModel: AuthModel
     @Environment(\.dismiss) private var dismiss
+    @State private var nonce: String?
     
     var body: some View {
         ScrollView {
             ZStack {
-                Color("Primary").ignoresSafeArea()
+             
                 VStack(spacing: 32) {
-                    // Back Button
-                    HStack {
-                        Button(action: {
-                            dismiss()
-                        }) {
-                            Image(systemName: "chevron.left")
-                                .font(.title2)
-                                .foregroundColor(Color("Secondary"))
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal, 32)
-                    .padding(.top, 10)
                     VStack(spacing: 2) {
-                        Image("sni_white")
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 40)
-                            .padding(.bottom,30)
-                            .foregroundColor(Color("Secondary"))
+                      
                         
-                        Text("Welcome back")
-                            .font(.largeTitle).fontWeight(.semibold)
-                            .foregroundColor(Color("Secondary"))
+                       
                         
                         Text("Let's get you back into SNI")
                             .font(.callout)
@@ -123,19 +98,21 @@ struct LoginView: View {
                     .padding(.horizontal, 32)
                     
                     VStack(spacing: 12) {
-                        Button {
-                            signInWithApple()
-                        } label: {
-                            HStack {
-                                Image(systemName: "apple.logo")
-                                Text("Continue With Apple")
+                        SignInWithAppleButton(.signIn) { request in
+                            let nonce = randomNonceString()
+                            self.nonce = nonce
+                            request.requestedScopes = [.email, .fullName]
+                            request.nonce = sha256(nonce)
+                        } onCompletion: { result in
+                            switch result {
+                            case .success(let authorization):
+                                loginWithApple(authorization)
+                            case .failure(let error):
+                                authModel.messageState = MessageState.error(error.localizedDescription)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color("Accent").opacity(0.2))
-                            .clipShape(Capsule())
-                            .foregroundColor(Color("Secondary"))
                         }
+                        .frame(minHeight: 55)
+                        .clipShape(Capsule())
                         .disabled(authModel.isLoading)
                         
                         Button {
@@ -170,12 +147,13 @@ struct LoginView: View {
                     .font(.footnote)
                     .padding(.horizontal, 32)
                     
-                    Spacer()
+         
                 }
             }
         }
         .navigationBarHidden(true)
         .loadingOverlay(isLoading: authModel.isLoading)
+        .background(.clear)
     }
     
     private func login() {
@@ -186,8 +164,76 @@ struct LoginView: View {
         authModel.signInWithGoogle()
     }
     
-    private func signInWithApple() {
-        authModel.signInWithApple()
+
+    private func loginWithApple(_ authorization: ASAuthorization) {
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            authModel.messageState = MessageState.error("Apple Sign-In credential is not available.")
+            return
+        }
+        
+        guard let nonce = self.nonce else {
+            authModel.messageState = MessageState.error("Nonce is missing.")
+            return
+        }
+        
+        guard let appleIDToken = appleIDCredential.identityToken,
+              let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+            authModel.messageState = MessageState.error("Unable to get ID token from Apple credential.")
+            return
+        }
+        
+        guard let authorizationCode = appleIDCredential.authorizationCode,
+              let authCodeString = String(data: authorizationCode, encoding: .utf8) else {
+            authModel.messageState = MessageState.error("Unable to get authorization code from Apple credential.")
+            return
+        }
+        
+        let userIdentifier = appleIDCredential.user
+        let email = appleIDCredential.email
+        let fullName = appleIDCredential.fullName
+        
+        let appleOAuthDto = AppleOAuthDto(
+            identityToken: idTokenString,
+            authorizationCode: authCodeString,
+            email: email,
+            fullName: PersonNameComponentsDto(
+                givenName: fullName?.givenName,
+                familyName: fullName?.familyName
+            ),
+            userIdentifier: userIdentifier
+        )
+        
+        authModel.signInWithApple(appleOAuthDto: appleOAuthDto) { result in
+            switch result {
+            case .success:
+                dismiss()
+            case .failure(let error):
+                authModel.messageState = MessageState.error(error.localizedDescription)
+            }
+        }
+    }
+    
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var randomBytes = [UInt8](repeating: 0, count: length)
+        let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        if errorCode != errSecSuccess {
+            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+        }
+        
+        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        let nonce = randomBytes.map { byte in
+            charset[Int(byte) % charset.count]
+        }
+        
+        return String(nonce)
+    }
+    
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        let hashedData = SHA256.hash(data: inputData)
+        let hashString = hashedData.compactMap { String(format: "%02x", $0) }.joined()
+        return hashString
     }
 }
 

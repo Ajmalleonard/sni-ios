@@ -342,7 +342,7 @@ nonisolated struct Rental: Identifiable, Codable, Sendable {
         try container.encode(carId, forKey: .carId)
         try container.encode(pickupLocationId, forKey: .pickupLocationId)
         try container.encodeIfPresent(pickupLocation, forKey: .pickupLocation)
-        try container.encode(dropoffLocationId, forKey: .dropoffLocationId)
+        try container.encodeIfPresent(dropoffLocationId, forKey: .dropoffLocationId)
         try container.encodeIfPresent(dropoffLocation, forKey: .dropoffLocation)
         try container.encodeIfPresent(reviewId, forKey: .reviewId)
     }
@@ -465,7 +465,6 @@ nonisolated struct Car: Identifiable, Codable, Sendable, Hashable {
         case createdAt, updatedAt, ownerId, owner, location, reviewIds, rentalIds
     }
     
-    // Custom initializer for creating Car instances
     init(id: String, make: String, model: String, year: Int, color: String, licensePlate: String,
          price: Double, images: [String], description: String?, status: CarStatus, features: [String],
          seatCount: Int, transmissionType: String, fuelType: String, vehicleType: VehicleType,
@@ -495,14 +494,9 @@ nonisolated struct Car: Identifiable, Codable, Sendable, Hashable {
         self.rentalIds = rentalIds
     }
 
-    // MARK: - Hashable Conformance
-    static func == (lhs: Car, rhs: Car) -> Bool {
-        return lhs.id == rhs.id
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
+    // Hashable by id
+    static func == (lhs: Car, rhs: Car) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -560,15 +554,9 @@ nonisolated struct Car: Identifiable, Codable, Sendable, Hashable {
     }
     
     private static func decodeDate(from container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> Date {
-        // Try different date formats
         if let dateString = try? container.decode(String.self, forKey: key) {
-            // Try ISO8601 format first
             let iso8601Formatter = ISO8601DateFormatter()
-            if let date = iso8601Formatter.date(from: dateString) {
-                return date
-            }
-            
-            // Try alternative formats
+            if let date = iso8601Formatter.date(from: dateString) { return date }
             let formatters = [
                 "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
                 "yyyy-MM-dd'T'HH:mm:ssZ",
@@ -576,64 +564,35 @@ nonisolated struct Car: Identifiable, Codable, Sendable, Hashable {
                 "yyyy-MM-dd'T'HH:mm:ss'Z'",
                 "yyyy-MM-dd HH:mm:ss"
             ]
-            
             for formatString in formatters {
                 let formatter = DateFormatter()
                 formatter.dateFormat = formatString
                 formatter.locale = Locale(identifier: "en_US_POSIX")
                 formatter.timeZone = TimeZone(secondsFromGMT: 0)
-                
-                if let date = formatter.date(from: dateString) {
-                    return date
-                }
+                if let date = formatter.date(from: dateString) { return date }
             }
-            
             throw DecodingError.dataCorruptedError(forKey: key, in: container, debugDescription: "Date string does not match expected formats: \(dateString)")
         } else {
-            // Try decoding as timestamp
             let timestamp = try container.decode(Double.self, forKey: key)
             return Date(timeIntervalSince1970: timestamp)
         }
     }
     
-    // Computed properties to avoid circular references
-    var reviews: [Review]? { nil } // Will be populated separately if needed
-    var rentals: [Rental]? { nil } // Will be populated separately if needed
+    var reviews: [Review]? { nil }
+    var rentals: [Rental]? { nil }
     
-    // Computed properties
-    var displayName: String {
-        "\(make) \(model)"
-    }
-    
-    var fullDisplayName: String {
-        "\(make) \(model) (\(year))"
-    }
-    
-    var primaryImage: String? {
-        images.first
-    }
-    
+    var displayName: String { "\(make) \(model)" }
+    var fullDisplayName: String { "\(make) \(model) (\(year))" }
+    var primaryImage: String? { images.first }
     var averageRating: Double {
         guard let reviews = reviews, !reviews.isEmpty else { return 0 }
-        let totalRating = reviews.reduce(0) { $0 + $1.rating }
-        return Double(totalRating) / Double(reviews.count)
+        let total = reviews.reduce(0) { $0 + $1.rating }
+        return Double(total) / Double(reviews.count)
     }
-    
-    var reviewCount: Int {
-        reviews?.count ?? 0
-    }
-    
-    var isAvailable: Bool {
-        status == .available || status == .approved || status == .pendingReview
-    }
-    
-    var priceFormatted: String {
-        String(format: "$%.0f", price)
-    }
-    
-    var pricePerDayFormatted: String {
-        "\(priceFormatted)/day"
-    }
+    var reviewCount: Int { reviews?.count ?? 0 }
+    var isAvailable: Bool { status == .available || status == .approved || status == .pendingReview }
+    var priceFormatted: String { String(format: "$%.0f", price) }
+    var pricePerDayFormatted: String { "\(priceFormatted)/day" }
 }
 
 // MARK: - Car Filter Parameters
@@ -701,21 +660,12 @@ nonisolated struct PriceCalculation: Codable, Sendable {
     let durationInDays: Int
     let distanceKm: Double
     
-    var basePriceFormatted: String {
-        String(format: "$%.0f", basePrice)
-    }
-    
-    var distancePriceFormatted: String {
-        String(format: "$%.0f", distancePrice)
-    }
-    
-    var totalPriceFormatted: String {
-        String(format: "$%.0f", totalPrice)
-    }
+    var basePriceFormatted: String { String(format: "$%.0f", basePrice) }
+    var distancePriceFormatted: String { String(format: "$%.0f", distancePrice) }
+    var totalPriceFormatted: String { String(format: "$%.0f", totalPrice) }
 }
 
 // MARK: - Backward Compatibility
-// Keep CarDisplay for existing components until they're updated
 typealias CarDisplay = Car
 
 // MARK: - Sample Data for Testing
@@ -809,8 +759,4 @@ enum VehicleTypeFilter: String, CaseIterable {
     }
 }
 
-// Ensure Car can be used with NavigationLink(value:) and NavigationStack path
-extension Car: Hashable {
-    public static func == (lhs: Car, rhs: Car) -> Bool { lhs.id == rhs.id }
-    public func hash(into hasher: inout Hasher) { hasher.combine(id) }
-}
+// Removed duplicate Hashable extension for Car to avoid redeclaration and redundant conformance.

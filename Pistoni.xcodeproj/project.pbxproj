@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		37AEB5CC2EC3511E002BFA31 /* GoogleService-Info 2.plist in Resources */ = {isa = PBXBuildFile; fileRef = 37AEB5BD2EC3511E002BFA31 /* GoogleService-Info 2.plist */; };
 		A15BC7872E22301600318CCE /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7862E22301600318CCE /* FirebaseAuth */; };
 		A15BC7892E22301600318CCE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7882E22301600318CCE /* FirebaseCore */; };
 		A15BC7942E224DFF00318CCE /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A15BC7932E224DFF00318CCE /* GoogleSignIn */; };
@@ -20,6 +21,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		37AEB5BD2EC3511E002BFA31 /* GoogleService-Info 2.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info 2.plist"; sourceTree = "<group>"; };
 		A15F685F2E7F780000D4497C /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		CEC880222E182B79009D61FD /* Pistoni.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pistoni.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -91,6 +93,7 @@
 				CEC880242E182B79009D61FD /* Pistoni */,
 				A198C2422E32B7DD006E1614 /* Frameworks */,
 				CEC880232E182B79009D61FD /* Products */,
+				37AEB5BD2EC3511E002BFA31 /* GoogleService-Info 2.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -182,6 +185,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				37AEB5CC2EC3511E002BFA31 /* GoogleService-Info 2.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
