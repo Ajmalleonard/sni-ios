@@ -11,7 +11,7 @@ struct ChangePasswordView: View {
     var body: some View {
         ScrollView {
             ZStack {
-                Color("Primary").ignoresSafeArea()
+                Color("white").ignoresSafeArea()
                 VStack(spacing: 32) {
                     HStack {
                         Spacer()
@@ -44,27 +44,27 @@ struct ChangePasswordView: View {
                         SecureField("Current Password", text: $currentPassword)
                             .padding()
                             .background(Color(.clear))
-                            .cornerRadius(15)
+                            .cornerRadius(100)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 15)
+                                RoundedRectangle(cornerRadius: 100)
                                     .stroke(Color("Accent"), lineWidth: 1)
                             )
                         
                         SecureField("New Password", text: $newPassword)
                             .padding()
                             .background(Color(.clear))
-                            .cornerRadius(15)
+                            .cornerRadius(100)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 15)
+                                RoundedRectangle(cornerRadius: 100)
                                     .stroke(Color("Accent"), lineWidth: 1)
                             )
                         
                         SecureField("Confirm New Password", text: $confirmPassword)
                             .padding()
                             .background(Color(.clear))
-                            .cornerRadius(15)
+                            .cornerRadius(100)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 15)
+                                RoundedRectangle(cornerRadius: 100)
                                     .stroke(Color("Accent"), lineWidth: 1)
                             )
                         

@@ -66,11 +66,11 @@ struct SheetSearchScreen: View {
                     searchInterfaceView
                 }
             }
-            .navigationTitle(showRouteView ? "Your Route" : "Search Location")
+            .navigationTitle(showRouteView ? "Your Route" : "Your Route")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(showRouteView ? "Back" : "Cancel") {
+                    Button(showRouteView ? "<" : "X") {
                         if showRouteView {
                             showRouteView = false
                             // Reset to allow new search
@@ -107,6 +107,16 @@ struct SheetSearchScreen: View {
         }
         .onChange(of: searchText) { _, newValue in
             performSearch(query: newValue)
+        }
+        .onChange(of: pickupText) { _, newValue in
+            if activeField == .pickup {
+                performSearch(query: newValue)
+            }
+        }
+        .onChange(of: destinationText) { _, newValue in
+            if activeField == .destination {
+                performSearch(query: newValue)
+            }
         }
         .sheet(isPresented: $showingLocationPicker) {
             LocationPickerView(selectedLocation: .constant(nil))
@@ -270,6 +280,7 @@ struct SheetSearchScreen: View {
                 VStack(spacing: 25) {
                     // Search input section
                     searchInputSection
+                    Divider()
                     
                     // Content based on state
                     if activeField != .none && searchService.searchState.isSearching {
@@ -296,37 +307,45 @@ struct SheetSearchScreen: View {
     
     private var searchInputSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Plan Your Trip")
-                .font(.footnote)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
-            
             VStack(spacing: 12) {
                 // Pickup Location Field
                 VStack(spacing: 0) {
                     HStack(spacing: 12) {
-                        Image(systemName: "circle.fill")
-                            .font(.caption)
-                            .foregroundColor(.green)
-                            .frame(width: 20, height: 20)
                         
-                        Button(action: {
-                            print("🎯 Pickup button tapped - setting activeField to .pickup")
-                            activeField = .pickup
-                            searchText = ""
-                            searchService.clearSearchState()
-                        }) {
-                            HStack {
-                                Text(pickupText.isEmpty ? "Pickup Location" : pickupText)
-                                    .font(.body)
-                                    .foregroundColor(pickupText.isEmpty ? .secondary : .primary)
-                                    .multilineTextAlignment(.leading)
-                                
-                                Spacer()
+                        if activeField != .pickup && activeField != .none {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.05))
+                                    .frame(width: 28, height: 28)
+                                Image(systemName: "circle.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.blue)
+                            }
+                            .frame(width: 28, height: 28)
+                        } else{
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 18))
+                                .foregroundColor(.gray.opacity(0.8))
+                        }
+                        
+                        TextField("Pickup Location", text: $pickupText, onEditingChanged: { isEditing in
+                            if isEditing {
+                                activeField = .pickup
+                                searchText = pickupText
+                                searchService.clearSearchState()
+                            }
+                        })
+                        .font(.body)
+                        .foregroundColor(.primary)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.words)
+                        .onChange(of: pickupText) { _, newValue in
+                            if activeField == .pickup {
+                                searchText = newValue
                             }
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        
+                        Spacer()
                         
                         if !pickupText.isEmpty {
                             Button {
@@ -339,44 +358,82 @@ struct SheetSearchScreen: View {
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
+                                    .imageScale(.medium)
+                            }
+                        }
+                        Button{
+                            
+                        }label: {
+                            
+                            if #available(iOS 26.0, *) {
+                                ZStack{
+                                    Circle().fill(Color.white.opacity(0.1))
+                                        .frame(width: 30, height: 30, )
+                                    
+                                    Image(systemName: "map")
+                                        .frame(width: 10, height: 10, )
+                                }
+                                .glassEffect()
+                            } else {
+                                // Fallback on earlier versions
                             }
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
-                }
-                .background(Color("Primary"))
-                .clipShape(RoundedRectangle(cornerRadius: 15))
+                    .padding(.vertical, 14)
+                    
+                   }
+                
+               
+                .clipShape(RoundedRectangle(cornerRadius: 28))
+                .contentShape(RoundedRectangle(cornerRadius: 28))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(activeField == .pickup ? Color.green.opacity(0.9) : Color.gray.opacity(0.3), lineWidth: activeField == .pickup ? 2 : 1)
+                    RoundedRectangle(cornerRadius: 28)
+                        .stroke(activeField == .pickup ? Color.blue.opacity(0.9) : Color.gray.opacity(0.3), lineWidth: activeField == .pickup ? 2 : 1)
                 )
+                .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
                 
                 // Destination Field
                 VStack(spacing: 0) {
                     HStack(spacing: 12) {
-                        Image(systemName: "location.fill")
-                            .font(.caption)
-                            .foregroundColor(.red)
-                            .frame(width: 20, height: 20)
                         
-                        Button(action: {
-                            print("🎯 Destination button tapped - setting activeField to .destination")
-                            activeField = .destination
-                            searchText = ""
-                            searchService.clearSearchState()
-                        }) {
-                            HStack {
-                                Text(destinationText.isEmpty ? "Destination" : destinationText)
-                                    .font(.body)
-                                    .foregroundColor(destinationText.isEmpty ? .secondary : .primary)
-                                    .multilineTextAlignment(.leading)
-                                
-                                Spacer()
+                        if activeField != .destination {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.05))
+                                    .frame(width: 28, height: 28)
+                                Image(systemName: "circle.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.blue)
+                            }
+                            .frame(width: 28, height: 28)
+                        } else{
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 18))
+                                .foregroundColor(.gray.opacity(0.8))
+                        }
+                            
+                     
+
+                        TextField("Destination", text: $destinationText, onEditingChanged: { isEditing in
+                            if isEditing {
+                                activeField = .destination
+                                searchText = destinationText
+                                searchService.clearSearchState()
+                            }
+                        })
+                        .font(.body)
+                        .foregroundColor(.primary)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.words)
+                        .onChange(of: destinationText) { _, newValue in
+                            if activeField == .destination {
+                                searchText = newValue
                             }
                         }
-                        .buttonStyle(PlainButtonStyle())
-                        
+
+                        Spacer()
+
                         if !destinationText.isEmpty {
                             Button {
                                 destinationText = ""
@@ -388,55 +445,37 @@ struct SheetSearchScreen: View {
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
+                                    .imageScale(.medium)
+                            }
+                        }
+
+                        Button {
+                            
+                        } label: {
+                            if #available(iOS 26.0, *) {
+                                ZStack {
+                                    Circle().fill(Color.white.opacity(0.1))
+                                        .frame(width: 30, height: 30)
+                                    Image(systemName: "map")
+                                        .frame(width: 10, height: 10)
+                                }
+                                .glassEffect()
+                            } else {
+                                // Fallback on earlier versions
                             }
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, 14)
                 }
-                .background(Color("Primary"))
-                .clipShape(RoundedRectangle(cornerRadius: 15))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(activeField == .destination ? Color.red.opacity(0.9) : Color.gray.opacity(0.3), lineWidth: activeField == .destination ? 2 : 1)
-                )
                 
-                // Search TextField (only show when a field is active)
-                if activeField != .none {
-                    VStack(spacing: 0) {
-                        HStack(spacing: 12) {
-                            Image("maper")
-                                .renderingMode(.template)
-                                .resizable()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(Color(.systemBlue))
-                            
-                            TextField("Search for \(activeField == .pickup ? "pickup" : "destination") location", text: $searchText)
-                                .font(.body)
-                                .foregroundColor(.primary)
-                                .autocorrectionDisabled()
-                                .textInputAutocapitalization(.words)
-                            
-                            if !searchText.isEmpty {
-                                Button {
-                                    searchText = ""
-                                    searchService.clearSearchState()
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
-                    }
-                    .background(Color("Primary"))
-                    .clipShape(RoundedRectangle(cornerRadius: 15))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(Color.blue.opacity(0.9), lineWidth: 2)
-                    )
-                }
+                .clipShape(RoundedRectangle(cornerRadius: 28))
+                .contentShape(RoundedRectangle(cornerRadius: 28))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28)
+                        .stroke(activeField == .destination ? Color.blue.opacity(0.9) : Color.gray.opacity(0.3), lineWidth: activeField == .destination ? 1 : 1)
+                )
+                .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
             }
         }
     }
@@ -512,8 +551,8 @@ struct SheetSearchScreen: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
-        .background(Color("Primary"))
-        .clipShape(RoundedRectangle(cornerRadius: 25))
+  
+        .clipShape(RoundedRectangle(cornerRadius: 0))
     }
     
     private var recentSearchesSection: some View {
@@ -653,12 +692,14 @@ struct SheetSearchScreen: View {
         if activeField == .pickup {
             fromLocation = location
             pickupText = prediction.mainText
+            searchText = pickupText
             activeField = .destination
             searchText = ""
             searchService.clearSearchState()
         } else if activeField == .destination {
             toLocation = location
             destinationText = prediction.mainText
+            searchText = destinationText
             activeField = .none
             searchText = ""
             searchService.clearSearchState()

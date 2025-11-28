@@ -14,8 +14,8 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-                        if authModel.currentUser != nil {
-             //User is logged in - show main app with tab navigation
+                        if authModel.currentUser == nil {
+             // User is logged in - show main app with tab navigation
             mainAppView()
                         } else if showSplash {
                             // Show splash screen
@@ -72,12 +72,7 @@ struct ContentView: View {
                 }.navigationTitle("Explore")
                     .safeAreaPadding(.bottom,safeAreaBottomPadding)
             }
-            Tab.init("Chat", systemImage: AppTab.chat.icon){
-                NavigationStack{
-                    ChatScreen()
-                }.navigationTitle("Chat")
-                    .safeAreaPadding(.bottom,safeAreaBottomPadding)
-            }
+            
             Tab.init("Profile", systemImage: AppTab.profile.icon){
                 NavigationStack{
                     ProfileView()
@@ -105,7 +100,7 @@ struct ContentView: View {
 enum AppTab: String, CaseIterable {
     case home = "Home"
     case explore = "Explore"
-    case chat = "Chat"
+
     case profile = "Profile"
     case search = "Search"
     
@@ -113,7 +108,7 @@ enum AppTab: String, CaseIterable {
         switch self {
         case .home: return "house.fill"
         case .explore: return "map.fill"
-        case .chat: return "ellipsis.message"
+     
         case .profile: return "person.circle"
         case .search: return "magnifyingglass"
         }

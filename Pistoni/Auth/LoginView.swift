@@ -9,79 +9,94 @@ struct LoginView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var nonce: String?
     
+//    ErrosState
+    @State private var isError: Bool = true
+    
     var body: some View {
+        ZStack {
+            LinearGradient(gradient: Gradient(colors: [ Color.white, Color(red: 0.92, green: 0.96, blue: 1.0)]), startPoint: .top, endPoint: .bottom).frame(maxWidth: .infinity, maxHeight: .infinity).ignoresSafeArea()
+        
         ScrollView {
-            ZStack {
+            
              
                 VStack(spacing: 32) {
-                    VStack(spacing: 2) {
-                      
+              
+                    VStack(spacing: 20) {
+                        VStack(alignment: .leading) {
+                            Text("Login to your account")
+                                .font(.headline.bold())
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(2) // control number of lines
+                                .lineSpacing(4) // control spacing between lines
+                                .fixedSize(horizontal: false, vertical: true) // allow wrapping to specified lines
+                                .frame(alignment: .leading)
+                        }
+                        .frame(maxWidth: .infinity)
+                        VStack(spacing: 16) {
+                            // Optimized TextField
+                            HStack {
+                                Image(systemName: "envelope")
+                                TextField("Your Email", text: $email)
+                                    .keyboardType(.emailAddress)
+                                    .autocapitalization(.none)
+                            }.padding()
+                                .background(Color.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 30)
+                                        .stroke(Color("Accent"), lineWidth: 1)
+                                )
+                                .foregroundColor(Color("Secondary"))
+                            
+                            
+                            HStack {
+                                Image(systemName: "lock")
+                                SecureField("Secure Code ***", text: $password)
+                            }.padding()
+                                .background(Color.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 30)
+                                        .stroke(Color("Accent"), lineWidth: 1)
+                                )
+                                .foregroundColor(Color("Secondary"))
+                        }
+                        
+                        .padding(.horizontal, 32)
                         
                        
                         
-                        Text("Let's get you back into SNI")
-                            .font(.callout)
-                            .foregroundColor(Color("Secondary"))
-                    }
-                    .padding()
-                    
-                    VStack(spacing: 16) {
-                        // Optimized TextField
-                        TextField("Your Email", text: $email)
-                            .keyboardType(.emailAddress)
-                            .autocapitalization(.none)
-                            .padding()
-                            .background(Color.clear)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(Color("Accent"), lineWidth: 1)
-                            )
-                            .foregroundColor(Color("Secondary"))
-                        
-                        SecureField("Your Password", text: $password)
-                            .padding()
-                            .background(Color.clear)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(Color("Accent"), lineWidth: 1)
-                            )
-                            .foregroundColor(Color("Secondary"))
-                    }
-                    .padding(.horizontal, 32)
-                    
-                    // Error and Success Messages
-                    VStack(spacing: 8) {
-                        if let errorMessage = authModel.errorMessage {
-                            Text(errorMessage)
-                                .foregroundColor(.red)
-                                .font(.footnote)
+                        Button("Forgot Password?") {
+                            // TODO: Handle forgot password
                         }
+                        .foregroundColor(Color("Accent"))
+                        .padding(.horizontal, 32)
                         
-                        if let successMessage = authModel.successMessage {
-                            Text(successMessage)
-                                .foregroundColor(.green)
-                                .font(.footnote)
+                        Button(action: login) {
+                            if #available(iOS 26.0, *) {
+                                Text("Sign in")
+                                    .fontWeight(.semibold)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color("Secondary"))
+                                    .glassEffect()
+                                    .foregroundColor(Color("Primary"))
+                                    .clipShape(Capsule())
+                            } else {
+                                // Fallback on earlier versions
+                                Text("Sign in")
+                                    .fontWeight(.semibold)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color("Secondary"))
+                                   
+                                    .foregroundColor(Color("Primary"))
+                                    .clipShape(Capsule())
+                            }
                         }
-                    }
-                    .padding(.horizontal, 32)
+                        .disabled(authModel.isLoading)
+                        .padding(.horizontal, 32)
+                    }.padding(.vertical,50)
+                       
                     
-                    Button("Forgot Password?") {
-                        // TODO: Handle forgot password
-                    }
-                    .foregroundColor(Color("Accent"))
-                    .padding(.horizontal, 32)
-                    
-                    Button(action: login) {
-                        Text("Sign in")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color("Secondary"))
-                            .foregroundColor(Color("Primary"))
-                            .clipShape(Capsule())
-                    }
-                    .disabled(authModel.isLoading)
-                    .padding(.horizontal, 32)
                     
                     // Or Divider
                     HStack {
@@ -148,12 +163,35 @@ struct LoginView: View {
                     .padding(.horizontal, 32)
                     
          
-                }
-            }
+                }.padding()
+                
+                
+            }.ignoresSafeArea()
         }
         .navigationBarHidden(true)
         .loadingOverlay(isLoading: authModel.isLoading)
-        .background(.clear)
+        .background(Color(#colorLiteral(red: 0.9411764706, green: 0.9411764706, blue: 0.9411764706, alpha: 1)))
+        .ignoresSafeArea()
+        .onChange(of: authModel.errorMessage) { _, newValue in
+            isError = newValue != nil
+        }
+        .onChange(of: authModel.successMessage) { _, newValue in
+            if newValue != nil { isError = true }
+        }
+        .sheet(isPresented: $isError) {
+            MessageSheetView(
+                errorMessage: authModel.errorMessage,
+                successMessage: authModel.successMessage,
+                onDismiss: { isError = false }
+            )
+            .padding(.horizontal, 32)
+            .presentationDetents([.height(UIScreen.main.bounds.height * 0.4)])
+            .presentationDragIndicator(.visible)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(.white)
+        }
+      
+          
     }
     
     private func login() {
@@ -171,7 +209,7 @@ struct LoginView: View {
             return
         }
         
-        guard let nonce = self.nonce else {
+        guard self.nonce != nil else {
             authModel.messageState = MessageState.error("Nonce is missing.")
             return
         }
@@ -241,3 +279,4 @@ struct LoginView: View {
     LoginView()
         .environmentObject(AuthModel())
 }
+

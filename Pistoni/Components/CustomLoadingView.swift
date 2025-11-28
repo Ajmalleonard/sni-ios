@@ -14,30 +14,17 @@ struct CustomLoadingView: View {
             VStack(spacing: 20) {
                 ZStack {
                     // Background circle
-                    Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 4)
-                        .frame(width: 60, height: 60)
                     
-                    // Animated arc
-                    Circle()
-                        .trim(from: 0, to: trimEnd)
-                        .stroke(
-                            LinearGradient(
-                                colors: [Color.blue, Color.purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ),
-                            style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                        )
-                        .frame(width: 60, height: 60)
+                    
+                    Image("Loading")
+                        .resizable()
+                        .frame(width: 50, height: 50)
                         .rotationEffect(Angle(degrees: isRotating))
-                        .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: isRotating)
-                        .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: trimEnd)
+                        .animation(.linear(duration: 1).repeatForever(autoreverses: false))
+                    
+                    
                 }
                 
-                Text("Loading...")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
             }
         }
         .onAppear {

@@ -23,7 +23,8 @@ struct RegisterView: View {
     @State var AuthErrorMessage: String = ""
     @State var showAuthAlert: Bool = false
     @State private var isLoading: Bool = false
-     @State private var nonce: String?
+    @State private var showMessageSheet: Bool = false
+    @State private var nonce: String?
     @AppStorage("log_Status") private var logStatus: Bool = false
     
     var body: some View {
@@ -153,17 +154,7 @@ struct RegisterView: View {
 //                            }
 //                            .disabled(!isValidEmail(email))
 //                        }
-                        ProgressiveButton{
-                        }label: {
-                            Text("Create account")
-                               .fontWeight(.semibold)
-                               .frame(maxWidth: .infinity)
-                               .padding(20)
-                               .background(Color("Secondary"))
-                               .foregroundColor(Color("Primary"))
-                        } action: { isCancelled in
-                            verifyEmail()
-                        }
+                        
                         
                         // Registration fields (animated in)
                         if authModel.registrationStep == .enterDetails {
@@ -263,6 +254,24 @@ struct RegisterView: View {
         .sheet(isPresented: $showEmailVerification) {
             EmailVerificationView(email: email)
                 .environmentObject(authModel)
+        }
+        .onChange(of: authModel.errorMessage) { _, newValue in
+            showMessageSheet = newValue != nil
+        }
+        .onChange(of: authModel.successMessage) { _, newValue in
+            if newValue != nil { showMessageSheet = true }
+        }
+        .sheet(isPresented: $showMessageSheet) {
+            MessageSheetView(
+                errorMessage: authModel.errorMessage,
+                successMessage: authModel.successMessage,
+                onDismiss: { showMessageSheet = false }
+            )
+            .padding(.horizontal, 32)
+            .presentationDetents([.height(UIScreen.main.bounds.height * 0.4)])
+            .presentationDragIndicator(.visible)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(.white)
         }
     }
     
@@ -406,3 +415,4 @@ nonisolated struct PersonNameComponentsDto: Codable, Sendable {
     let givenName: String?
     let familyName: String?
 }
+

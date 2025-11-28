@@ -43,206 +43,237 @@ struct SearchView: View {
     @State private var selectedRoute: RouteInfo?
     @State private var showRouteOverlay = false
     
-    // Pre-computed iOS version check
-    private let isModernIOS = {
-        if #available(iOS 26, *) {
-            return true
-        } else {
-            return false
-        }
-    }()
+ 
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
+            BaseMapView(
+                mapPosition: $mapPosition,
+                isShowingProfile: $isShowingProfile,
+                showingSearchScreen: $showingSearchScreen,
+                selectedRoute: $selectedRoute,
+                showRouteOverlay: $showRouteOverlay,
+                toolbarOpacity: toolbarOpacity,
+                navigationPath: $navigationPath,
+                authModel: authModel,
+                locationManager: locationManager,
+                notificationViewModel: notificationViewModel,
+                showPermissionAlert: $showPermissionAlert
+            )
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                DestinationView(
+                    destination: destination,
+                    authModel: authModel,
+                    isShowingProfile: $isShowingProfile
+                )
+            }
+            .sheet(isPresented: $showingSearchScreen) {
+                buildSearchSheet()
+            }
+        }
+    }
+    
+    // MARK: - Extracted Builders
+    @ViewBuilder
+    private func buildSearchSheet() -> some View {
+        SheetSearchScreen(
+            onRouteSelected: { fromLocation, toLocation in
+                let route = RouteInfo(
+                    fromLocation: fromLocation,
+                    toLocation: toLocation,
+                    distance: "12.5 km",
+                    duration: "18 min",
+                    estimatedCost: "$15-20",
+                    routePolyline: nil
+                )
+                selectedRoute = route
+                showRouteOverlay = true
+                showingSearchScreen = false
+            },
+            isPreview: authModel.isPreview
+        )
+        .environmentObject(authModel)
+    }
+    
+    private func handleLocationAuthorizationChange(_ status: CLAuthorizationStatus) {
+        if status == .authorizedWhenInUse || status == .authorizedAlways {
+            locationManager.startUpdatingLocation()
+        } else if status == .denied || status == .restricted {
+            showPermissionAlert = true
+        }
+    }
+    
+    // MARK: - Extracted Subviews
+    private struct BaseMapView: View {
+        @Binding var mapPosition: GMSCameraPosition
+        @Binding var isShowingProfile: Bool
+        @Binding var showingSearchScreen: Bool
+        @Binding var selectedRoute: RouteInfo?
+        @Binding var showRouteOverlay: Bool
+        let toolbarOpacity: CGFloat
+        @Binding var navigationPath: NavigationPath
+
+        var authModel: AuthModel
+        @ObservedObject var locationManager: LocationManager
+        @ObservedObject var notificationViewModel: NotificationViewModel
+        @Binding var showPermissionAlert: Bool
+
+        var body: some View {
             GoogleMapsView(mapPosition: $mapPosition)
                 .ignoresSafeArea()
                 .onAppear {
                     GoogleMapsConfiguration.configure()
+                    setupLocationAndNotifications()
                 }
-            .overlay(alignment: .bottom) {
-                if !isShowingProfile && !showingSearchScreen {
-                    SearchBottomSheet(
-                        navigationPath: $navigationPath,
-                        showingSearchScreen: $showingSearchScreen,
-                        onProfileTap: {
-                            navigationPath.append(NavigationDestination.profile)
+                .overlay(alignment: .bottom) {
+                    if !isShowingProfile && !showingSearchScreen {
+                        SearchBottomSheet(
+                            navigationPath: $navigationPath,
+                            showingSearchScreen: $showingSearchScreen,
+                            onProfileTap: {
+                                navigationPath.append(NavigationDestination.profile)
+                            }
+                        )
+                        .transition(.move(edge: .bottom))
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    MoreButton()
+                        .opacity(isShowingProfile ? 0 : toolbarOpacity)
+                        .scaleEffect(isShowingProfile ? 0.8 : 1.0)
+                        .padding([ .leading], 10)
+                        .animation(.easeInOut(duration: 0.3), value: isShowingProfile)
+                }
+                .overlay(alignment: .bottom) {
+                    if let route = selectedRoute, showRouteOverlay {
+                        RouteOverlayView(
+                            route: route,
+                            onClose: {
+                                selectedRoute = nil
+                                showRouteOverlay = false
+                            },
+                            onBookRide: {
+                                print("Booking ride for route: \(route.summary)")
+                            }
+                        )
+                        .padding(.bottom, 100)
+                        .animation(.spring(response: 0.6), value: showRouteOverlay)
+                    }
+                }
+                .onChange(of: locationManager.authorizationStatus) { _, status in
+                    handleAuthorizationChange(status)
+                }
+                .onChange(of: navigationPath) { _, newValue in
+                    print("🔄 navigationPath changed. Count: \(newValue.count)")
+                }
+                .onChange(of: isShowingProfile) { _, newValue in
+                    print("🎭 isShowingProfile changed to: \(newValue)")
+                    print("📱 Bottom sheet will be: \(newValue ? "hidden" : "shown")")
+                    print("🔧 Floating tools will be: \(newValue ? "hidden" : "shown")")
+                }
+                .alert("Location Access Required", isPresented: $showPermissionAlert) {
+                    Button("Cancel", role: .cancel) { }
+                    Button("Settings") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
                         }
+                    }
+                } message: {
+                    Text("Please allow location access to see your position on the map and find nearby rentals.")
+                }
+        }
+
+        private func setupLocationAndNotifications() {
+            locationManager.requestLocationPermission()
+            locationManager.onLocationUpdate = { location in
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    mapPosition = GMSCameraPosition.camera(
+                        withLatitude: location.latitude,
+                        longitude: location.longitude,
+                        zoom: 15.0
                     )
-                    .transition(.move(edge: .bottom))
                 }
             }
-            .navigationDestination(for: NavigationDestination.self) { destination in
+            if let userId = authModel.currentUser?.id {
+                notificationViewModel.authModel = authModel
+                notificationViewModel.refreshUnreadCount(for: userId)
+                notificationViewModel.startNotificationListener(for: userId)
+            }
+        }
+
+        private func handleAuthorizationChange(_ status: CLAuthorizationStatus) {
+            if status == .authorizedWhenInUse || status == .authorizedAlways {
+                locationManager.startUpdatingLocation()
+            } else if status == .denied || status == .restricted {
+                showPermissionAlert = true
+            }
+        }
+    }
+
+    private struct DestinationView: View {
+        let destination: NavigationDestination
+        let authModel: AuthModel
+        @Binding var isShowingProfile: Bool
+
+        var body: some View {
+            Group {
                 switch destination {
                 case .profile:
-                ProfileView()
-                    .environmentObject(authModel)
-                        .onAppear {
-                            print("🟢 ProfileView appeared via NavigationStack")
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isShowingProfile = true
-                            }
-                        }
-                        .onDisappear {
-                            print("🔙 ProfileView disappeared - showing bottom sheet")
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isShowingProfile = false
-                            }
-                        }
-                case .chat:
-                    ChatScreen()
+                    ProfileView()
                         .environmentObject(authModel)
-                        .onAppear {
-                            print(" ChatScreen appeared via NavigationStack")
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isShowingProfile = true
-                    }
-            }
-                        .onDisappear {
-                            print("🔙 ChatScreen disappeared - showing bottom sheet")
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isShowingProfile = false
-                            }
-                        }
+                        .onAppear { withAnimation(.easeInOut(duration: 0.3)) { isShowingProfile = true } }
+                        .onDisappear { withAnimation(.easeInOut(duration: 0.3)) { isShowingProfile = false } }
+
                 case .notifications:
                     NotificationView()
                         .environmentObject(authModel)
-                        .onAppear {
-                            print("🔔 NotificationView appeared via NavigationStack")
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isShowingProfile = true
-                            }
-                        }
-                        .onDisappear {
-                            print("NotificationView disappeared - showing bottom sheet")
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isShowingProfile = false
-                            }
-                        }
-                }
-            }
-        
-            .overlay(alignment: .topLeading) {
-                WeatherWidget()
-                    .opacity(isShowingProfile ? 0 : toolbarOpacity)
-                    .scaleEffect(isShowingProfile ? 0.8 : 1.0)
-                    .padding([.leading, .top], 15)
-                    .animation(.easeInOut(duration: 0.3), value: isShowingProfile)
-            }
-            .overlay(alignment: .bottom) {
-                if let route = selectedRoute, showRouteOverlay {
-                    RouteOverlayView(
-                        route: route,
-                        onClose: {
-                            selectedRoute = nil
-                            showRouteOverlay = false
-
-                        },
-                        onBookRide: {
-                            // Handle ride booking
-                            print("Booking ride for route: \(route.summary)")
-                        }
-                    )
-                    .padding(.bottom, 100) // Above the bottom sheet
-                    .animation(.spring(response: 0.6), value: showRouteOverlay)
-                }
-            }
-      
-
-            .onAppear {
-                locationManager.requestLocationPermission()
+                        .onAppear { withAnimation(.easeInOut(duration: 0.3)) { isShowingProfile = true } }
+                        .onDisappear { withAnimation(.easeInOut(duration: 0.3)) { isShowingProfile = false } }
                 
-                // Observe userLocation changes
-                locationManager.onLocationUpdate = { location in
-                    // Center map on user's location when it updates
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        mapPosition = GMSCameraPosition.camera(
-                            withLatitude: location.latitude,
-                            longitude: location.longitude,
-                            zoom: 15.0
-                        )
-                    }
+                default:
+                    EmptyView()
+                        .onAppear { withAnimation(.easeInOut(duration: 0.3)) { isShowingProfile = false } }
                 }
-                
-                // Initialize notification listener
-                if let userId = authModel.currentUser?.id {
-                    notificationViewModel.authModel = authModel
-                    notificationViewModel.refreshUnreadCount(for: userId)
-                    notificationViewModel.startNotificationListener(for: userId)
-                }
-            }
-            .onChange(of: locationManager.authorizationStatus) { _, status in
-                if status == .authorizedWhenInUse || status == .authorizedAlways {
-                    locationManager.startUpdatingLocation()
-                } else if status == .denied || status == .restricted {
-                    showPermissionAlert = true
-            }
-        }
-            .onChange(of: navigationPath) { _, newValue in
-                print("🔄 navigationPath changed. Count: \(newValue.count)")
-            }
-            .onChange(of: isShowingProfile) { _, newValue in
-                print("🎭 isShowingProfile changed to: \(newValue)")
-                print("📱 Bottom sheet will be: \(newValue ? "hidden" : "shown")")
-                print("🔧 Floating tools will be: \(newValue ? "hidden" : "shown")")
-            }
-            .alert("Location Access Required", isPresented: $showPermissionAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Settings") {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(url)
-                    }
-                }
-            } message: {
-                Text("Please allow location access to see your position on the map and find nearby rentals.")
-            }
-            .sheet(isPresented: $showingSearchScreen) {
-                SheetSearchScreen(
-                    onRouteSelected: { fromLocation, toLocation in
-                        // Create route info from selected locations
-                        let route = RouteInfo(
-                            fromLocation: fromLocation,
-                            toLocation: toLocation,
-                            distance: "12.5 km",
-                            duration: "18 min",
-                            estimatedCost: "$15-20",
-                            routePolyline: nil
-                        )
-                        
-                        selectedRoute = route
-                        showRouteOverlay = true
-                        showingSearchScreen = false
-                        
-                        // Optional: Update map position to show route
-                        // mapPosition = ... (calculate center of route)
-                    },
-                    isPreview: authModel.isPreview
-                )
-                .environmentObject(authModel)
             }
         }
     }
     
-    /// Weather Widget - Simplified
-    @ViewBuilder
-    private func WeatherWidget() -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: "cloud.fill")
-            Text("28°")
+    private struct MoreButton: View {
+        @State private var showProfile = false
+
+        var body: some View {
+            Button {
+                showProfile = true
+            } label: {
+                
+                if #available(iOS 26.0, *) {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 16, weight: .semibold))
+                        .padding(20)
+                        .frame(width:40,height: 40)
+                        .glassEffect()
+                } else {
+                    // Fallback on earlier versions
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 16, weight: .semibold))
+                        .padding(20)
+                        .background(
+                            .ultraThickMaterial, // iOS glass effect
+                            in: RoundedRectangle(cornerRadius: 50, style: .continuous)
+                        )
+                }
+                
+                   
+            }
+            
+            .sheet(isPresented: $showProfile) {
+                ProfileView()
+                    .presentationDetents([.large])              // takes big part of screen
+                    .presentationDragIndicator(.visible)         // iOS 16+ style drag bar
+            }
         }
-        .font(.caption)
-        .padding(8)
-        .background(isModernIOS ? 
-            AnyView(Rectangle().fill(.clear)) : 
-            AnyView(Rectangle().fill(.ultraThinMaterial))
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
-
-
-
-
-
 
 #Preview {
     // Use a mock AuthModel for previews to avoid network calls
@@ -252,5 +283,4 @@ struct SearchView: View {
     return SearchView()
         .environmentObject(mockAuthModel)
 }
-
 

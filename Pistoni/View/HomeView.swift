@@ -19,13 +19,11 @@ struct HomeView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Main content
+            //MARK: Main Content
             ScrollView {
                 VStack(spacing: 0) {
-                    // Header Section
-                    headerSection
-                    
-                    // Main Content
+                    //TODO: Header Section
+
                     VStack(spacing: 15) {
                         // Vehicle Type Filter Section
                         vehicleTypeFilterSection
@@ -38,7 +36,7 @@ struct HomeView: View {
                     }
                     .padding(.top, 25)
                     .padding(.horizontal, 10)
-                    .padding(.bottom, 100) // Space for bottom navigation
+                    .padding(.bottom, 100) //
                 }
             }
             .background(Color(.systemGroupedBackground))

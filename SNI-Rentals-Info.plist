@@ -7,9 +7,11 @@
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Google</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.924727721829-31o1og730ceh5o7084epg3ioaumndrca</string>
+				<string>com.googleusercontent.apps.924727721829-2mbr2n6obgnrtasivqta42eu27e3a2ir</string>
 			</array>
 		</dict>
 	</array>
