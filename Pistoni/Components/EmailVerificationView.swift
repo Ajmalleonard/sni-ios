@@ -33,12 +33,12 @@ struct EmailVerificationView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Email Verification")
                             .font(.title3)
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
                         
                         HStack(spacing: 4) {
                            Text("Enter the 6-digit code sent to \(email)")
                                 .font(.caption)
-                                .foregroundColor(Color("Secondary"))
+                                .foregroundColor(Color("AppSecondary"))
                             
                         }
                     }
@@ -50,7 +50,7 @@ struct EmailVerificationView: View {
                             dismiss()
                         }
                         .font(.title)
-                        .tint(Color("Secondary").opacity(0.7))
+                        .tint(Color("AppSecondary").opacity(0.7))
                         .offset(x: 10, y: -15)
                     }
                     .padding(.top, 10)
@@ -102,7 +102,7 @@ struct EmailVerificationView: View {
                     Text("Failed to Send Code")
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color("Secondary"))
+                        .foregroundColor(Color("AppSecondary"))
                     
                     Text(authModel.messageState.message ?? "Unknown error")
                         .font(.caption)
@@ -132,7 +132,7 @@ struct EmailVerificationView: View {
                             .font(.system(size: 100))
                             .contentTransition(.symbolEffect)
                             .frame(width: 150, height: 150)
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
                     } animation: { _ in
                         .linear(duration: 1.2)
                     }
@@ -141,15 +141,15 @@ struct EmailVerificationView: View {
                     Text("Sending Verification Code...")
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color("Secondary"))
+                        .foregroundColor(Color("AppSecondary"))
                 }
                 .geometryGroup()
                 .transition(.blurReplace)
             }
         }
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .presentationDetents([.height(280)])
-        .presentationBackground(Color("Primary"))
+        .presentationBackground(Color("AppPrimary"))
         .presentationCornerRadius(isIOS26 ? nil : 25)
         .interactiveDismissDisabled()
         .alert(alertMessage, isPresented: $showAlert) {

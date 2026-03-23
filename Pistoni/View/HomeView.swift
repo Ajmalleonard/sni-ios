@@ -16,13 +16,20 @@ struct HomeView: View {
     @State private var showScheduleTrip = false
     @State private var hasNotifications: Bool = true
     @State private var showNotifications = false
+    @State private var showRouteSelection = false
     
     var body: some View {
         ZStack(alignment: .bottom) {
             //MARK: Main Content
             ScrollView {
                 VStack(spacing: 0) {
-                    //TODO: Header Section
+                    // Header Section
+                    headerSection
+                    
+                    // Route Selection Enty Point
+                    routeSelectionSection
+                        .padding(.horizontal, 20)
+                        .padding(.top, 10)
 
                     VStack(spacing: 15) {
                         // Vehicle Type Filter Section
@@ -58,7 +65,7 @@ struct HomeView: View {
                         Image("notify")
                             .resizable()
                             .renderingMode(.template)
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
                             .frame(width: 20, height: 20)
                             .padding(12)
                         
@@ -88,6 +95,10 @@ struct HomeView: View {
             NotificationView()
                 .environmentObject(authModel)
         }
+        .fullScreenCover(isPresented: $showRouteSelection) {
+            RouteSelectionView()
+                .environmentObject(authModel)
+        }
         .onAppear {
             Task {
                 await vehicleDataManager.initialFetch()
@@ -103,6 +114,45 @@ struct HomeView: View {
             hasNotifications: hasNotifications
         )
         .padding(.horizontal, 5)
+    }
+    
+    // MARK: - Route Selection Section
+    private var routeSelectionSection: some View {
+        Button {
+            showRouteSelection = true
+        } label: {
+            HStack(spacing: 15) {
+                Image(systemName: "magnifyingglass")
+                    .font(.title3)
+                    .foregroundColor(Color("AppSecondary"))
+                    .frame(width: 40, height: 40)
+                    .background(Color("AppSecondary").opacity(0.1))
+                    .clipShape(Circle())
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Where to?")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Text("Anywhere via Pistoni")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "clock.fill")
+                    .foregroundColor(.secondary)
+                    .padding(8)
+                    .background(.ultraThinMaterial)
+                    .clipShape(Circle())
+            }
+            .padding(16)
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
+        }
     }
     
     // MARK: - Vehicle Type Filter Section
@@ -174,17 +224,17 @@ struct VehicleFilterButton: View {
             HStack(spacing: 8) {
                 Image(systemName: filter.icon)
                     .font(.subheadline)
-                    .foregroundColor(isSelected ? .white : Color("Secondary"))
+                    .foregroundColor(isSelected ? .white : Color("AppSecondary"))
                 
                 Text(filter.displayName)
                     .font(.caption2)
                     .fontWeight(.medium)
-                    .foregroundColor(isSelected ? .white : Color("Secondary"))
+                    .foregroundColor(isSelected ? .white : Color("AppSecondary"))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 15)
             .background(
-                isSelected ? Color("Secondary") : Color("Primary")
+                isSelected ? Color("AppSecondary") : Color("AppPrimary")
             )
             .clipShape(Capsule())
         }

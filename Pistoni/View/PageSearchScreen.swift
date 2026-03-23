@@ -101,7 +101,7 @@ struct PageSearchScreen: View {
         }
         .navigationDestination(isPresented: $navigateToCarSelection) {
             if let fromLoc = fromLocation, let toLoc = toLocation {
-                CarSelectionView(
+                LegacyCarSelectionView(
                     fromLocation: fromLoc,
                     toLocation: toLoc,
                     estimatedCost: estimatedCost,
@@ -177,7 +177,7 @@ struct PageSearchScreen: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
                 }
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 15))
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
@@ -228,7 +228,7 @@ struct PageSearchScreen: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
                 }
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 15))
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
@@ -264,7 +264,7 @@ struct PageSearchScreen: View {
                         .padding(.horizontal, 20)
                         .padding(.vertical, 16)
                     }
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 15))
                     .overlay(
                         RoundedRectangle(cornerRadius: 15)
@@ -343,13 +343,13 @@ struct PageSearchScreen: View {
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 24)
                                 .padding(.vertical, 12)
-                                .background(Color("Secondary"))
+                                .background(Color("AppSecondary"))
                                 .clipShape(RoundedRectangle(cornerRadius: 25))
                         }
                     }
                 }
                 .padding(20)
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
@@ -370,7 +370,7 @@ struct PageSearchScreen: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .clipShape(RoundedRectangle(cornerRadius: 25))
     }
     
@@ -408,7 +408,7 @@ struct PageSearchScreen: View {
                     }
                 }
             }
-            .background(Color("Primary"))
+            .background(Color("AppPrimary"))
             .clipShape(RoundedRectangle(cornerRadius: 25))
         }
     }
@@ -430,7 +430,7 @@ struct PageSearchScreen: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .clipShape(RoundedRectangle(cornerRadius: 25))
     }
     
@@ -452,7 +452,7 @@ struct PageSearchScreen: View {
                             searchService.searchState.recentSearches = []
                         }
                         .font(.caption)
-                        .foregroundColor(Color("Secondary"))
+                        .foregroundColor(Color("AppSecondary"))
                     }
                     .padding(.horizontal, 25)
                     
@@ -473,7 +473,7 @@ struct PageSearchScreen: View {
                             }
                         }
                     }
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                 }
             }
@@ -508,7 +508,7 @@ struct PageSearchScreen: View {
                             }
                         }
                     }
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                 }
             }
@@ -624,7 +624,7 @@ struct PageSearchScreen: View {
 
 // MARK: - Car Selection View
 
-struct CarSelectionView: View {
+struct LegacyCarSelectionView: View {
     let fromLocation: SearchLocation
     let toLocation: SearchLocation
     let estimatedCost: String
@@ -692,7 +692,7 @@ struct CarSelectionView: View {
                         }
                     }
                     .padding(16)
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     
                     // Car options (placeholder)
@@ -735,7 +735,7 @@ struct CarOptionRow: View {
         HStack(spacing: 16) {
             Image(systemName: "car.fill")
                 .font(.title2)
-                .foregroundColor(Color("Secondary"))
+                .foregroundColor(Color("AppSecondary"))
                 .frame(width: 40, height: 40)
             
             VStack(alignment: .leading, spacing: 4) {
@@ -755,7 +755,7 @@ struct CarOptionRow: View {
                 .fontWeight(.semibold)
         }
         .padding(16)
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)

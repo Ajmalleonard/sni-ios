@@ -51,7 +51,7 @@ struct QuickAction: View {
                     }
                 )
             }
-            .background(Color("Primary"))
+            .background(Color("AppPrimary"))
             .clipShape(RoundedRectangle(cornerRadius: 25))
         }
     }
@@ -86,7 +86,7 @@ struct QuickActionItem: View {
         HStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(Color("Secondary"))
+                .foregroundColor(Color("AppSecondary"))
                 .frame(width: 24, height: 24)
             
             VStack(alignment: .leading, spacing: 2) {

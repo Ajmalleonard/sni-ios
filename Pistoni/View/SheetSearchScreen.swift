@@ -208,13 +208,13 @@ struct SheetSearchScreen: View {
                                     Text("$12-18")
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
-                                        .foregroundColor(Color("Secondary"))
+                                        .foregroundColor(Color("AppSecondary"))
                                 }
                             }
                         }
                     }
                     .padding(20)
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)
@@ -236,7 +236,7 @@ struct SheetSearchScreen: View {
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
-                                .background(Color("Secondary"))
+                                .background(Color("AppSecondary"))
                                 .clipShape(RoundedRectangle(cornerRadius: 25))
                         }
                         
@@ -254,14 +254,14 @@ struct SheetSearchScreen: View {
                             Text("Search Again")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
-                                .foregroundColor(Color("Secondary"))
+                                .foregroundColor(Color("AppSecondary"))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(Color("Primary"))
+                                .background(Color("AppPrimary"))
                                 .clipShape(RoundedRectangle(cornerRadius: 20))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 20)
-                                        .stroke(Color("Secondary"), lineWidth: 1)
+                                        .stroke(Color("AppSecondary"), lineWidth: 1)
                                 )
                         }
                     }
@@ -491,7 +491,7 @@ struct SheetSearchScreen: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .clipShape(RoundedRectangle(cornerRadius: 25))
     }
     
@@ -529,7 +529,7 @@ struct SheetSearchScreen: View {
                     }
                 }
             }
-            .background(Color("Primary"))
+            .background(Color("AppPrimary"))
             .clipShape(RoundedRectangle(cornerRadius: 25))
         }
     }
@@ -572,7 +572,7 @@ struct SheetSearchScreen: View {
                             searchService.searchState.recentSearches = []
                         }
                         .font(.caption)
-                        .foregroundColor(Color("Secondary"))
+                        .foregroundColor(Color("AppSecondary"))
                     }
                     .padding(.horizontal, 25)
                     
@@ -593,7 +593,7 @@ struct SheetSearchScreen: View {
                             }
                         }
                     }
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                 }
             }
@@ -628,7 +628,7 @@ struct SheetSearchScreen: View {
                             }
                         }
                     }
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                 }
             }

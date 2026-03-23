@@ -36,17 +36,17 @@ struct OptimizedBackground: View {
     private var gradientColors: [Color] {
         if isDarkMode {
             return [
-                Color("Primary").opacity(0.95),
-                Color("Secondary").opacity(0.1),
+                Color("AppPrimary").opacity(0.95),
+                Color("AppSecondary").opacity(0.1),
                 Color("Accent").opacity(0.3),
-                Color("Primary").opacity(0.9)
+                Color("AppPrimary").opacity(0.9)
             ]
         } else {
             return [
-                Color("Primary").opacity(0.8),
-                Color("Secondary").opacity(0.2),
+                Color("AppPrimary").opacity(0.8),
+                Color("AppSecondary").opacity(0.2),
                 Color("Accent").opacity(0.4),
-                Color("Primary").opacity(0.85)
+                Color("AppPrimary").opacity(0.85)
             ]
         }
     }
@@ -74,7 +74,7 @@ struct AnimatedOverlay: View {
             
             // Second layer
             Circle()
-                .fill(Color("Secondary").opacity(isDarkMode ? 0.05 : 0.1))
+                .fill(Color("AppSecondary").opacity(isDarkMode ? 0.05 : 0.1))
                 .frame(width: 200, height: 200)
                 .offset(x: 120 - animationOffset * 0.7, y: 200 - animationOffset * 0.3)
                 .blur(radius: 40)
@@ -115,9 +115,9 @@ struct StaticBackground: View {
             // Main gradient
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color("Primary").opacity(isDarkMode ? 0.95 : 0.8),
-                    Color("Secondary").opacity(isDarkMode ? 0.1 : 0.2),
-                    Color("Primary").opacity(isDarkMode ? 0.9 : 0.85)
+                    Color("AppPrimary").opacity(isDarkMode ? 0.95 : 0.8),
+                    Color("AppSecondary").opacity(isDarkMode ? 0.1 : 0.2),
+                    Color("AppPrimary").opacity(isDarkMode ? 0.9 : 0.85)
                 ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -138,7 +138,7 @@ struct StaticBackground: View {
 // MARK: - Minimal Background (Most efficient)
 struct MinimalBackground: View {
     var body: some View {
-        Color("Primary")
+        Color("AppPrimary")
             .ignoresSafeArea()
     }
 }

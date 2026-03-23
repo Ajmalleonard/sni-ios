@@ -59,7 +59,7 @@ struct VehicleTypeHomeView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 20)
                     .frame(maxWidth: .infinity)
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                 }
                 .padding(.horizontal, 20)
@@ -239,7 +239,7 @@ struct QuickFilterMenuItem: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.title3)
-                    .foregroundColor(isSelected ? .blue : Color("Secondary"))
+                    .foregroundColor(isSelected ? .blue : Color("AppSecondary"))
                     .frame(width: 24, height: 24)
                 
                 VStack(alignment: .leading, spacing: 2) {

@@ -17,10 +17,10 @@ struct Badge: View {
                 
                 // — Text —
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("SNI Premium")
+                    Text("Pistoni Rides")
                         .font(.title3.weight(.semibold))
                     
-                    Text("You enjoying full access of App")
+                    Text("You're our premium user! 🎉")
                         .font(.body)
                 }
                 .foregroundStyle(.black)

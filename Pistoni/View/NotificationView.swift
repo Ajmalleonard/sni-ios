@@ -6,66 +6,53 @@ struct NotificationView: View {
     @StateObject private var viewModel = NotificationViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var cancellables = Set<AnyCancellable>()
+    @State private var selectedFilter: NotificationFilter = .all
+    
+    enum NotificationFilter: String, CaseIterable, Identifiable {
+        case all = "All"
+        case unread = "Unread"
+        case system = "System"
+        case chat = "Messages"
+        case promotion = "Promotions"
+        
+        var id: String { rawValue }
+    }
+    
+    var filteredNotifications: [Notification] {
+        switch selectedFilter {
+        case .all:
+            return viewModel.notifications
+        case .unread:
+            return viewModel.notifications.filter { !$0.isRead }
+        case .system:
+            return viewModel.notifications.filter { $0.type == .system }
+        case .chat:
+            return viewModel.notifications.filter { $0.type == .chat }
+        case .promotion:
+            return viewModel.notifications.filter { $0.type == .promotion }
+        }
+    }
     
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground).ignoresSafeArea()
+            Color(hex: "F5F5F5").ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Custom header with back button and title
-                HStack {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundColor(Color("Secondary"))
-                    }
-                    Spacer()
-                    
-                    VStack(spacing: 2) {
-                        Text("Mark Read")
-                            .font(.caption)
-                            .foregroundColor(Color("Secondary"))
-                        Text("Notifications")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                    }
-                    
-                    Spacer()
-                    
-                    HStack {
-                        // Test API button
-                        Button {
-                            testAPIConnection()
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(.blue)
-                        }
-                        
-                        // Mark all as read - icon only
-                        if !viewModel.notifications.isEmpty {
-                            Button {
-                                if let userId = authModel.currentUser?.id {
-                                    viewModel.markAllAsRead(for: userId)
-                                }
-                            } label: {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.green)
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-                .background(Color(.systemBackground))
+                // Custom Header
+                headerView
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
                 
-                // Main content
+                // Filter Bar
+                filterBar
+                    .padding(.bottom, 24)
+                
+                // Main Content
                 if viewModel.isLoading {
+                    Spacer()
                     CustomLoadingView()
-                } else if viewModel.notifications.isEmpty {
+                    Spacer()
+                } else if filteredNotifications.isEmpty {
                     Spacer()
                     emptyNotificationsView
                     Spacer()
@@ -90,18 +77,103 @@ struct NotificationView: View {
         }
     }
     
+    // MARK: - Subviews
+    
+    private var headerView: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 44, height: 44)
+                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.black)
+                }
+            }
+            
+            Spacer()
+            
+            Text("Notifications")
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundColor(.black)
+            
+            Spacer()
+            
+            // Hidden button to balance the layout
+            Circle()
+                .fill(Color.clear)
+                .frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 24)
+    }
+    
+    private var filterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(NotificationFilter.allCases) { filter in
+                    Button {
+                        withAnimation {
+                            selectedFilter = filter
+                        }
+                    } label: {
+                        Text(filter.rawValue)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(
+                                Capsule()
+                                    .fill(selectedFilter == filter ? Color(hex: "064E3B") : Color.white)
+                            )
+                            .foregroundColor(selectedFilter == filter ? .white : .black)
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.gray.opacity(0.1), lineWidth: selectedFilter == filter ? 0 : 1)
+                            )
+                    }
+                }
+            }
+            .padding(.horizontal, 5)
+        }
+    }
+    
+    private var notificationsList: some View {
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                ForEach(filteredNotifications) { notification in
+                    NotificationCard(notification: notification)
+                        .onTapGesture {
+                            if !notification.isRead {
+                                viewModel.markAsRead(notificationId: notification.id)
+                            }
+                            handleNotificationTap(notification)
+                        }
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
+        }
+    }
+    
     private var emptyNotificationsView: some View {
         VStack(spacing: 16) {
             Image(systemName: "bell.slash")
                 .font(.system(size: 60))
-                .foregroundColor(.gray)
+                .foregroundColor(.gray.opacity(0.5))
                 .padding(.bottom, 8)
             
             Text("No Notifications")
-                .font(.title2)
+                .font(.title3)
                 .fontWeight(.semibold)
+                .foregroundColor(.primary)
             
-            Text("You don't have any notifications yet.")
+            Text("You don't have any notifications in this category yet.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -109,62 +181,24 @@ struct NotificationView: View {
         }
     }
     
-    private var notificationsList: some View {
-        List {
-            ForEach(viewModel.notifications) { notification in
-                NotificationRow(
-                    notification: notification,
-                    onMarkAsRead: {
-                        viewModel.markAsRead(notificationId: notification.id)
-                    },
-                    onDelete: {
-                        // For now, just mark as read since we don't have delete in the viewModel
-                        viewModel.markAsRead(notificationId: notification.id)
-                    }
-                )
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if !notification.isRead {
-                        viewModel.markAsRead(notificationId: notification.id)
-                    }
-                    handleNotificationTap(notification)
-                }
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-            }
-        }
-        .listStyle(.plain)
-        .refreshable {
-            if let userId = authModel.currentUser?.id {
-                viewModel.loadNotifications(for: userId)
-            }
-        }
-    }
+    // MARK: - Helper Methods
     
     private func handleNotificationTap(_ notification: Notification) {
         // Handle different notification types
         switch notification.type {
         case .chat:
-            // Navigate to chat if there's a related entity ID
             if let chatId = notification.relatedEntityId {
                 print("Navigate to chat: \(chatId)")
-                // Navigation would happen here
             }
         case .rental:
-            // Navigate to rental details
             if let rentalId = notification.relatedEntityId {
                 print("Navigate to rental: \(rentalId)")
-                // Navigation would happen here
             }
         case .payment:
-            // Navigate to payment details
             if let paymentId = notification.relatedEntityId {
                 print("Navigate to payment: \(paymentId)")
-                // Navigation would happen here
             }
         case .system, .promotion:
-            // Just mark as read, no navigation needed
             break
         }
     }
@@ -231,10 +265,9 @@ struct NotificationView: View {
     private func testAPIConnection() {
         print("🧪 Testing API connection...")
         
-        // For now, we'll use a dummy token since auth is disabled
         let dummyToken = "test-token"
         
-        let notificationService = NotificationService()
+        let notificationService = NotificationService.shared
         notificationService.createTestNotification(token: dummyToken)
             .receive(on: DispatchQueue.main)
             .sink(
@@ -248,8 +281,6 @@ struct NotificationView: View {
                 },
                 receiveValue: { notification in
                     print("📱 Received notification from API: \(notification.title)")
-                    
-                    // Add the API notification to our list
                     viewModel.notifications.insert(notification, at: 0)
                     viewModel.notifications = viewModel.notifications.sorted { $0.createdAt > $1.createdAt }
                 }
@@ -258,240 +289,127 @@ struct NotificationView: View {
     }
 }
 
-struct NotificationRow: View {
+// MARK: - Notification Card View
+struct NotificationCard: View {
     let notification: Notification
-    let onMarkAsRead: () -> Void
-    let onDelete: () -> Void
-    
-    @State private var dragOffset: CGFloat = 0
-    @State private var showingReadButton = false
-    @State private var showingDeleteButton = false
     
     var body: some View {
-                ZStack {
-            // Background actions
-            HStack {
-                // Delete button (appears when swiping right)
-                if showingDeleteButton && dragOffset > 0 {
-                    Button(action: {
-                        withAnimation(.spring()) {
-                            onDelete()
-                            resetSwipe()
-                        }
-                    }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: "trash.fill")
-                                .font(.system(size: 8))
-                                .foregroundColor(.white)
-                        }
-                        .frame(width: 20, height: 20)
-                        .background(Color.red)
-                        .clipShape(Capsule())
-                    }
-                }
+        HStack(spacing: 16) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(iconBackgroundColor.opacity(0.1))
+                    .frame(width: 48, height: 48)
                 
-                Spacer()
-                
-                // Mark as read button (appears when swiping left)
-                if showingReadButton && dragOffset < 0 && !notification.isRead {
-                    Button(action: {
-                        withAnimation(.spring()) {
-                            onMarkAsRead()
-                            resetSwipe()
-                        }
-                    }) {
-                        VStack(spacing: 4) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 8))
-                                .foregroundColor(.white)
-                        }
-                        .frame(width: 20, height: 20)
-                        .background(Color.green)
-                        .clipShape(Capsule())
-                    }
-                }
+                Image(systemName: iconName)
+                    .font(.system(size: 20))
+                    .foregroundColor(iconBackgroundColor)
             }
             
-            // Main notification content
-            HStack(alignment: .top, spacing: 12) {
-                // Icon
-                notificationIcon
-                    .frame(width: 40, height: 40)
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                Text(notification.title)
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.black)
+                    .lineLimit(1)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    // Title
-                    Text(notification.title)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                    
-                    // Message
-                    Text(notification.body)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                    
-                    // Time
-                    Text(timeAgo(from: notification.createdAt))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 2)
-                }
-                
-                Spacer()
-                
-                // Unread indicator and swipe hint
-                VStack {
-                    if !notification.isRead {
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 8, height: 8)
-                    }
-                    
-                    Spacer()
-                    
-                    // Swipe hint
-                    if !showingReadButton && !showingDeleteButton {
-                        HStack(spacing: 2) {
-                            Image(systemName: "chevron.right")
-                                .font(.caption2)
-                                .foregroundColor(.red.opacity(0.6))
-                            Image(systemName: "chevron.left")
-                                .font(.caption2)
-                                .foregroundColor(.green.opacity(notification.isRead ? 0.3 : 0.6))
-                        }
-                    }
-                }
+                Text(notification.body)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .lineLimit(1)
             }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(notification.isRead ? Color(.systemBackground) : Color(.systemBlue).opacity(0.05))
-                    .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-            )
-            .offset(x: dragOffset)
-            .animation(.interactiveSpring(), value: dragOffset)
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        let translation = value.translation.width
-                        
-                        if translation < 0 {
-                            // Left swipe - show read button
-                            dragOffset = max(translation, -140)
-                            showingReadButton = abs(translation) > 30
-                            showingDeleteButton = false
-                        } else if translation > 0 {
-                            // Right swipe - show delete button
-                            dragOffset = min(translation, 140)
-                            showingDeleteButton = translation > 30
-                            showingReadButton = false
-                        }
-                    }
-                    .onEnded { value in
-                        let translation = value.translation.width
-                        
-                        withAnimation(.spring()) {
-                            if translation < -100 && !notification.isRead {
-                                // Auto-perform mark as read
-                                onMarkAsRead()
-                                resetSwipe()
-                            } else if translation > 100 {
-                                // Auto-perform delete
-                                onDelete()
-                                resetSwipe()
-                            } else if abs(translation) > 50 {
-                                // Show action button
-                                if translation < 0 {
-                                    dragOffset = -140
-                                    showingReadButton = !notification.isRead
-                                } else {
-                                    dragOffset = 140
-                                    showingDeleteButton = true
-                                }
-                            } else {
-                                // Snap back
-                                resetSwipe()
-                            }
-                        }
-                    }
-            )
-            .onTapGesture {
-                if showingReadButton || showingDeleteButton {
-                    // Hide action buttons
-                    withAnimation(.spring()) {
-                        resetSwipe()
-                    }
-                } else {
-                    // Handle notification tap
-                    if !notification.isRead {
-                        onMarkAsRead()
-                    }
-                }
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .contentShape(Rectangle())
-    }
-    
-    private func resetSwipe() {
-        dragOffset = 0
-        showingReadButton = false
-        showingDeleteButton = false
-    }
-    
-    private var notificationIcon: some View {
-        ZStack {
-            Circle()
-                .fill(iconBackgroundColor)
             
-            Image(systemName: iconName)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
+            Spacer()
+            
+            // Right Side Info
+            VStack(alignment: .trailing, spacing: 4) {
+                // Time
+                Text(timeAgo(from: notification.createdAt))
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(timeColor)
+                
+                // Date
+                Text(formatDate(notification.createdAt))
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
         }
+        .padding(.all, 16)
+        .background(Color.white)
+        .cornerRadius(0)
+        .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 5)
     }
     
+    // Helpers
     private var iconName: String {
         switch notification.type {
-        case .chat:
-            return "message.fill"
-        case .rental:
-            return "car.fill"
-        case .payment:
-            return "creditcard.fill"
-        case .system:
-            return "bell.fill"
-        case .promotion:
-            return "tag.fill"
+        case .chat: return "message.fill"
+        case .rental: return "car.fill"
+        case .payment: return "creditcard.fill"
+        case .system: return "bell.fill"
+        case .promotion: return "tag.fill"
         }
     }
     
     private var iconBackgroundColor: Color {
         switch notification.type {
-        case .chat:
-            return .blue
-        case .rental:
-            return .green
-        case .payment:
-            return .purple
-        case .system:
-            return .gray
-        case .promotion:
-            return .orange
+        case .chat: return Color.blue
+        case .rental: return Color(hex: "064E3B") // Dark Green
+        case .payment: return Color.orange
+        case .system: return Color.purple
+        case .promotion: return Color.red
         }
+    }
+    
+    private var timeColor: Color {
+        // Use green for recent/unread, black otherwise
+        return !notification.isRead ? Color(hex: "10B981") : Color.black
+    }
+    
+    private func timeAgo(from date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM.yyyy"
+        return formatter.string(from: date)
     }
 }
 
-// MARK: - Helper Functions
-private func timeAgo(from date: Date) -> String {
-    let formatter = RelativeDateTimeFormatter()
-    formatter.unitsStyle = .abbreviated
-    return formatter.localizedString(for: date, relativeTo: Date())
+// MARK: - Extensions
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
 }
 
 #Preview {
     NotificationView()
         .environmentObject(AuthModel())
-} 
+}

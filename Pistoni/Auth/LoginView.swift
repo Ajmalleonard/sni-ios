@@ -8,10 +8,10 @@ struct LoginView: View {
     @EnvironmentObject var authModel: AuthModel
     @Environment(\.dismiss) private var dismiss
     @State private var nonce: String?
-    
+    @AppStorage("log_Status") private var logStatus: Bool = false
+
 //    ErrosState
-    @State private var isError: Bool = true
-    
+    @State private var isError: Bool = false
     var body: some View {
         ZStack {
             LinearGradient(gradient: Gradient(colors: [ Color.white, Color(red: 0.92, green: 0.96, blue: 1.0)]), startPoint: .top, endPoint: .bottom).frame(maxWidth: .infinity, maxHeight: .infinity).ignoresSafeArea()
@@ -21,17 +21,21 @@ struct LoginView: View {
              
                 VStack(spacing: 32) {
               
-                    VStack(spacing: 20) {
-                        VStack(alignment: .leading) {
-                            Text("Login to your account")
-                                .font(.headline.bold())
-                                .multilineTextAlignment(.leading)
-                                .lineLimit(2) // control number of lines
-                                .lineSpacing(4) // control spacing between lines
-                                .fixedSize(horizontal: false, vertical: true) // allow wrapping to specified lines
-                                .frame(alignment: .leading)
+                    VStack( ) {
+                        VStack(spacing: 20) {
+                            Spacer(minLength: 30)
+
+                            VStack(spacing: 0) {
+                                Image("newa")
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 200)
+                                    .clipped()
+                            }
+
                         }
                         .frame(maxWidth: .infinity)
+                  
                         VStack(spacing: 16) {
                             // Optimized TextField
                             HStack {
@@ -45,7 +49,7 @@ struct LoginView: View {
                                     RoundedRectangle(cornerRadius: 30)
                                         .stroke(Color("Accent"), lineWidth: 1)
                                 )
-                                .foregroundColor(Color("Secondary"))
+                                .foregroundColor(Color("AppSecondary"))
                             
                             
                             HStack {
@@ -57,7 +61,7 @@ struct LoginView: View {
                                     RoundedRectangle(cornerRadius: 30)
                                         .stroke(Color("Accent"), lineWidth: 1)
                                 )
-                                .foregroundColor(Color("Secondary"))
+                                .foregroundColor(Color("AppSecondary"))
                         }
                         
                         .padding(.horizontal, 32)
@@ -71,28 +75,25 @@ struct LoginView: View {
                         .padding(.horizontal, 32)
                         
                         Button(action: login) {
-                            if #available(iOS 26.0, *) {
-                                Text("Sign in")
-                                    .fontWeight(.semibold)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color("Secondary"))
-                                    .glassEffect()
-                                    .foregroundColor(Color("Primary"))
-                                    .clipShape(Capsule())
-                            } else {
-                                // Fallback on earlier versions
-                                Text("Sign in")
-                                    .fontWeight(.semibold)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color("Secondary"))
-                                   
-                                    .foregroundColor(Color("Primary"))
-                                    .clipShape(Capsule())
-                            }
+                            Text("Sign in")
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color("AppSecondary"))
+                                .foregroundColor(Color("AppPrimary"))
+                                .clipShape(Capsule())
                         }
                         .disabled(authModel.isLoading)
+                        .padding(.horizontal, 32)
+                        // Registration prompt
+                        HStack {
+                            Text("Don't have an account?")
+                                .foregroundColor(Color("AppSecondary").opacity(0.7))
+                            NavigationLink("Sign Up", destination: RegisterView().environmentObject(authModel).navigationBarHidden(true))
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color("Accent"))
+                        }
+                        .font(.footnote)
                         .padding(.horizontal, 32)
                     }.padding(.vertical,50)
                        
@@ -105,14 +106,14 @@ struct LoginView: View {
                             .frame(height: 1)
                         Text("or")
                             .padding(.horizontal, 16)
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
                         Rectangle()
                             .fill(Color("Accent"))
                             .frame(height: 1)
                     }
                     .padding(.horizontal, 32)
                     
-                    VStack(spacing: 12) {
+                    HStack(spacing: 12) {
                         SignInWithAppleButton(.signIn) { request in
                             let nonce = randomNonceString()
                             self.nonce = nonce
@@ -126,8 +127,19 @@ struct LoginView: View {
                                 authModel.messageState = MessageState.error(error.localizedDescription)
                             }
                         }
-                        .frame(minHeight: 55)
-                        .clipShape(Capsule())
+                        .frame(width: 55, height: 55)
+                        .clipShape(Circle())
+                        .overlay(
+                            Circle()
+                                .fill(Color.black)
+                                .allowsHitTesting(false)
+                        )
+                        .overlay(
+                            Image(systemName: "applelogo")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.white)
+                                .allowsHitTesting(false)
+                        )
                         .disabled(authModel.isLoading)
                         
                         Button {
@@ -138,29 +150,20 @@ struct LoginView: View {
                                     .renderingMode(.template)
                                     .resizable()
                                     .frame(width:25, height: 25)
-                                    .foregroundColor(Color("Secondary"))
-                                Text("Continue With Google")
+                                    .foregroundColor(Color("AppSecondary"))
+                                
                             }
-                            .frame(maxWidth: .infinity)
+                          
                             .padding()
                             .background(Color("Accent").opacity(0.2))
                             .clipShape(Capsule())
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
                         }
                         .disabled(authModel.isLoading)
                     }
                     .padding(.horizontal, 32)
                     
-                    // Registration prompt
-                    HStack {
-                        Text("Don't have an account?")
-                            .foregroundColor(Color("Secondary").opacity(0.7))
-                        NavigationLink("Sign Up", destination: RegisterView().environmentObject(authModel).navigationBarHidden(true))
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color("Accent"))
-                    }
-                    .font(.footnote)
-                    .padding(.horizontal, 32)
+                   
                     
          
                 }.padding()
@@ -170,13 +173,16 @@ struct LoginView: View {
         }
         .navigationBarHidden(true)
         .loadingOverlay(isLoading: authModel.isLoading)
-        .background(Color(#colorLiteral(red: 0.9411764706, green: 0.9411764706, blue: 0.9411764706, alpha: 1)))
+        
         .ignoresSafeArea()
         .onChange(of: authModel.errorMessage) { _, newValue in
             isError = newValue != nil
         }
         .onChange(of: authModel.successMessage) { _, newValue in
-            if newValue != nil { isError = true }
+            if newValue != nil {
+                isError = true
+                logStatus = true
+            }
         }
         .sheet(isPresented: $isError) {
             MessageSheetView(
@@ -196,10 +202,18 @@ struct LoginView: View {
     
     private func login() {
         authModel.login(email: email, password: password)
+        // Observe successMessage to update logStatus
+        if authModel.successMessage != nil {
+            logStatus = true
+        }
     }
     
     private func signInWithGoogle() {
         authModel.signInWithGoogle()
+        // Observe successMessage to update logStatus
+        if authModel.successMessage != nil {
+            logStatus = true
+        }
     }
     
 
@@ -244,6 +258,7 @@ struct LoginView: View {
         authModel.signInWithApple(appleOAuthDto: appleOAuthDto) { result in
             switch result {
             case .success:
+                logStatus = true
                 dismiss()
             case .failure(let error):
                 authModel.messageState = MessageState.error(error.localizedDescription)
@@ -279,4 +294,3 @@ struct LoginView: View {
     LoginView()
         .environmentObject(AuthModel())
 }
-

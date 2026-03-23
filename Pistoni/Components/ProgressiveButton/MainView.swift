@@ -10,11 +10,12 @@ import SwiftUI
 struct MainView: View {
     @State private var showSheet: Bool = false
     @State private var isImage: Bool = false
+    @State private var processState: ProcessState = .confirm
     var body: some View {
         NavigationStack {
             List {
                 Section("Demo") {
-                    Toggle("Smaller Button", isOn: $isImage)
+                    Toggle("Smaller Buttons", isOn: $isImage)
                     
                     Button("Show Sheet") {
                         showSheet.toggle()
@@ -42,12 +43,10 @@ struct MainView: View {
             .sheet(isPresented: $showSheet) {
                 NavigationStack {
                     List {
-                        Section("Demo") {
+                        Section("Main") {
                             ButtonView()
                         }
-                        Section("Progressive Button Demo") {
-                            ProgressiveButtonDemo()
-                        }
+                        
                     }
                     .navigationTitle("Sheet Example")
                 }
@@ -57,22 +56,8 @@ struct MainView: View {
     
     @ViewBuilder
     func ButtonView() -> some View {
-        AnimatedButton(cornerRadius: .init(source: 30, destination: 45)) {
-            /// Dummy Content
-            VStack(alignment: .leading, spacing: 15) {
-                Image(systemName: "exclamationmark.circle")
-                    .font(.largeTitle)
-                    .foregroundStyle(.red)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Text("Are you sure?")
-                    .font(.title2.bold())
-                
-                Text("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.")
-                    .foregroundStyle(.gray)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.bottom, 10)
+        AnimatedButton(cornerRadius: .init(source: 30, destination: 45), state: $processState) {
+       
         } label: {
             if isImage {
                 Image(systemName: "trash.fill")
@@ -87,44 +72,49 @@ struct MainView: View {
                     .padding(.vertical, 11)
                     .background(.red.gradient)
             }
-        } action: { isCancelled in
-            print(isCancelled)
+        }// In your action:
+        action: { isCancelled in
+            if isCancelled {
+                // User cancelled; reset if you want
+                processState = .confirm
+                return
+            }
+
+            // Start loading
+            processState = .loading(message: "Working…")
+
+            // Configure a timeout (e.g., 3 seconds)
+            let timeoutNanos: UInt64 = 3_000_000_000
+
+            Task {
+                // Simulate your async work here.
+                // For example, you could await a network call and return early on success.
+                // If your real task completes first, set success and return before timeout triggers.
+
+                // Simulate work taking 1.5 seconds
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+
+                let succeeded = Bool.random() // Replace with your real result
+                if succeeded {
+                    // If you succeed before timeout, set success and return
+                    processState = .success(title: "Done", message: "Operation completed.")
+                    return
+                }
+
+                // If not succeeded yet, wait until timeout for a last chance
+                try? await Task.sleep(nanoseconds: timeoutNanos - 1_500_000_000)
+
+                // If you're still here, consider it a failure
+                processState = .error(title: "Timeout", message: "Please try again.")
+            }
         }
-        .frame(maxWidth: .infinity, alignment: isImage ? .trailing : .center)
+        .frame(maxWidth: .infinity, alignment: isImage ? .center : .center)
     }
 }
 
-struct ProgressiveButtonDemo: View {
-    @State private var state: ProgressiveState = .idle
-    var body: some View {
-        VStack(spacing: 12) {
-            ProgressiveButton(state: $state, confirmTitle: "Proceed") {
-                // onConfirm: simulate async work
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    // Randomize success/error for demo
-                    if Bool.random() {
-                        state = .success("Completed successfully")
-                    } else {
-                        state = .error("Something went wrong")
-                    }
-                }
-            } onCancel: {
-                // onCancel
-            } onTap: {
-                // onTap
-            } label: {
-                Text("Start Action")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-                    .background(Color("Secondary"))
-                    .foregroundColor(Color("Primary"))
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
+
 
 #Preview {
     MainView()
 }
+

@@ -10,7 +10,8 @@ struct MessageSheetView: View {
             VStack {
 #if os(iOS)
             if #available(iOS 26, *) {
-                Image("errormoji")
+                Image("errormoji").resizable()
+                    .frame(width: 300, height: 300)
             }
 #endif
                 if let errorMessage {
@@ -33,8 +34,8 @@ struct MessageSheetView: View {
                 Text("Dismiss")
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .foregroundColor(Color("Primary"))
-                    .background(Color("Secondary"))
+                    .foregroundColor(Color("AppPrimary"))
+                    .background(Color("AppSecondary"))
                     .clipShape(Capsule())
             }
 

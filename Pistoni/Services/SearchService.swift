@@ -117,7 +117,7 @@ class SearchService: ObservableObject {
             
             // Get place types for this search context
             let placeTypes = GooglePlacesService.getPlaceTypes(for: searchType)
-            print("   📍 Place types for search: \(placeTypes)")
+            print("   📍 Place types for search: \(String(describing: placeTypes))")
             
             // Fetch predictions from Google Places API
             print("   🌐 Calling googlePlacesService.fetchPlacePredictions...")
@@ -175,7 +175,6 @@ class SearchService: ObservableObject {
         userId: String,
         selectedIndex: Int
     ) async {
-        do {
             // Create confirmed search query
             let searchQuery = SearchQuery(
                 userId: userId,
@@ -201,12 +200,6 @@ class SearchService: ObservableObject {
                 searchState.predictions = []
                 searchState.isSearching = false
             }
-        } catch {
-            await MainActor.run {
-                searchState.errorMessage = error.localizedDescription
-                searchState.isSearching = false
-            }
-        }
     }
     
     // MARK: - Save Search to Backend
@@ -283,7 +276,7 @@ class SearchService: ObservableObject {
     
     // MARK: - Helper Methods
     private func getDeviceInfo() async -> String {
-        return await UIDevice.current.model
+        return UIDevice.current.model
     }
     
     private func getAppVersion() -> String {

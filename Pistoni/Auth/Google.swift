@@ -13,14 +13,14 @@ struct GoogleButtonContent: View { // Computed property to break down complex bu
                 .renderingMode(.template)
                 .resizable()
                 .frame(width: 30, height: 30)
-                .foregroundColor(Color("Secondary"))
+                .foregroundColor(Color("AppSecondary"))
             Text("Continue With Google")
                 .padding(.horizontal, 10)
         }
         .frame(maxWidth: .infinity)
         .padding()
         .clipShape(Capsule())
-        .foregroundColor(Color("Secondary"))
+        .foregroundColor(Color("AppSecondary"))
         .overlay(
             RoundedRectangle(cornerRadius: .infinity)
                 .stroke(Color.gray.opacity(0.4), lineWidth: 2)

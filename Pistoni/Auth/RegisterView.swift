@@ -32,31 +32,13 @@ struct RegisterView: View {
             ZStack {
              
                 VStack(spacing: 32) {
-                
-                    
                     VStack(alignment:.leading ,spacing: 2) {
-                        
                         Text("Create an account")
                             .font(.title2)
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
                     }
                     .padding()
-                 
-                    
                     VStack(spacing: 12) {
-//                        Button {
-//                            signInWithApple()
-//                        } label: {
-//                            HStack {
-//                                Image(systemName: "apple.logo")
-//                                Text("Continue With Apple")
-//                            }
-//                            .frame(maxWidth: .infinity)
-//                            .padding()
-//                            .background(Color("Accent").opacity(0.2))
-//                            .clipShape(Capsule())
-//                            .foregroundColor(Color("Secondary"))
-//                        }
                         SignInWithAppleButton(.signIn){request in
                             let nonce = randomNonceString()
                             self.nonce = nonce
@@ -77,7 +59,7 @@ struct RegisterView: View {
                             
                             
                         }.frame(minHeight: 55).clipShape(Capsule())
-//                        .disabled(authModel.isLoading)
+
                         
                         
                         
@@ -95,13 +77,13 @@ struct RegisterView: View {
                                     .renderingMode(.template)
                                     .resizable()
                                     .frame(width:30, height: 30)
-                                    .foregroundColor(Color("Secondary"))
+                                    .foregroundColor(Color("AppSecondary"))
                                 Text("Continue With Google").padding(.horizontal,10)
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
                             .clipShape(Capsule())
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
                             .overlay(
                                 RoundedRectangle(cornerRadius: .infinity)
                                     .stroke(Color.gray.opacity(0.4), lineWidth: 2) // Border color and width
@@ -119,7 +101,7 @@ struct RegisterView: View {
 //                            .frame(height: 1)
                         Text("or")
                             .padding(.horizontal, 16)
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
 //                        Rectangle()
 //                            .fill(Color("Accent"))
 //                            .frame(height: 1)
@@ -138,7 +120,7 @@ struct RegisterView: View {
                                     RoundedRectangle(cornerRadius: .infinity)
                                         .stroke(Color("Accent"), lineWidth: 1)
                                 )
-                                .foregroundColor(Color("Secondary"))
+                                .foregroundColor(Color("AppSecondary"))
                         }.frame(maxWidth: .infinity)
                         
                         // Show verify button if in email step
@@ -148,8 +130,8 @@ struct RegisterView: View {
 //                                    .fontWeight(.semibold)
 //                                    .frame(maxWidth: .infinity)
 //                                    .padding(20)
-//                                    .background(Color("Secondary"))
-//                                    .foregroundColor(Color("Primary"))
+//                                    .background(Color("AppSecondary"))
+//                                    .foregroundColor(Color("AppPrimary"))
 //                                    .clipShape(Capsule())
 //                            }
 //                            .disabled(!isValidEmail(email))
@@ -167,7 +149,7 @@ struct RegisterView: View {
                                         RoundedRectangle(cornerRadius: 15)
                                             .stroke(Color("Accent"), lineWidth: 1)
                                     )
-                                    .foregroundColor(Color("Secondary"))
+                                    .foregroundColor(Color("AppSecondary"))
                                 
                                 SecureField("Your Password", text: $password)
                                     .padding()
@@ -176,7 +158,7 @@ struct RegisterView: View {
                                         RoundedRectangle(cornerRadius: 15)
                                             .stroke(Color("Accent"), lineWidth: 1)
                                     )
-                                    .foregroundColor(Color("Secondary"))
+                                    .foregroundColor(Color("AppSecondary"))
                                 
                                 Button(action: completeRegistration) {
                                     if authModel.isLoading {
@@ -189,8 +171,8 @@ struct RegisterView: View {
                                             .fontWeight(.semibold)
                                             .frame(maxWidth: .infinity)
                                             .padding()
-                                            .background(Color("Secondary"))
-                                            .foregroundColor(Color("Primary"))
+                                            .background(Color("AppSecondary"))
+                                            .foregroundColor(Color("AppPrimary"))
                                             .clipShape(Capsule())
                                     }
                                 }
@@ -200,24 +182,6 @@ struct RegisterView: View {
                         }
                     }
                     .padding(.horizontal, 32)
-                    
-                    // Error and Success Messages
-                    VStack(spacing: 8) {
-                        if let errorMessage = authModel.errorMessage {
-                            Text(errorMessage)
-                                .foregroundColor(.red)
-                                .font(.footnote)
-                        }
-                        
-                        if let successMessage = authModel.successMessage {
-                            Text(successMessage)
-                                .foregroundColor(.green)
-                                .font(.footnote)
-                        }
-                    }
-                    .padding(.horizontal, 32)
-                    
-                  
                     
                     // Login prompt
                     VStack{
@@ -234,7 +198,7 @@ struct RegisterView: View {
                     
                     HStack {
                         Text("Have an account?")
-                            .foregroundColor(Color("Secondary").opacity(0.7))
+                            .foregroundColor(Color("AppSecondary").opacity(0.7))
                         NavigationLink("Log in here", destination: LoginView().environmentObject(authModel).navigationBarHidden(true))
                             .fontWeight(.semibold)
                             .foregroundColor(Color("Accent"))
@@ -259,7 +223,10 @@ struct RegisterView: View {
             showMessageSheet = newValue != nil
         }
         .onChange(of: authModel.successMessage) { _, newValue in
-            if newValue != nil { showMessageSheet = true }
+            if newValue != nil {
+                showMessageSheet = true
+                logStatus = true
+            }
         }
         .sheet(isPresented: $showMessageSheet) {
             MessageSheetView(
@@ -415,4 +382,3 @@ nonisolated struct PersonNameComponentsDto: Codable, Sendable {
     let givenName: String?
     let familyName: String?
 }
-

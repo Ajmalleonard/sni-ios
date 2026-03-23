@@ -21,7 +21,7 @@ struct LoaderView: View {
                             .font(.system(size: 100))
                             .contentTransition(.symbolEffect)
                             .frame(width: 150, height: 150)
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
                     } animation: { _ in
                         .linear(duration: 1.2)
                     }
@@ -30,13 +30,13 @@ struct LoaderView: View {
                     Text(loadingText)
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color("Secondary"))
+                        .foregroundColor(Color("AppSecondary"))
                 }
                 .geometryGroup()
                 .transition(.blurReplace)
             }
         }
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .animation(.snappy(duration: 0.3, extraBounce: 0), value: isLoading)
     }
 }

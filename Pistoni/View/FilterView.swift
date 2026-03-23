@@ -239,14 +239,14 @@ struct FilterMenuItem: View {
             HStack(spacing: 20) {
                 Image(systemName: icon)
                     .font(.title3)
-                    .foregroundColor(isSelected ? .black : Color("Secondary").opacity(0.5))
+                    .foregroundColor(isSelected ? .black : Color("AppSecondary").opacity(0.5))
                     .frame(width: 24, height: 24)
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.body)
                         .fontWeight(.medium)
-                        .foregroundColor(isSelected ? .black : Color("Secondary").opacity(0.5))
+                        .foregroundColor(isSelected ? .black : Color("AppSecondary").opacity(0.5))
                         .multilineTextAlignment(.leading)
                     
                     Text(subtitle)

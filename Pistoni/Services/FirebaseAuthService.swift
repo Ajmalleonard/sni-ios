@@ -11,7 +11,7 @@ import Combine
 
 class FirebaseAuthService: ObservableObject {
     @Published var isFirebaseAuthenticated = false
-    private let baseURL = "https://api.snicolt.com"
+    private let baseURL = "https://api.pistoni.io"
     
     // MARK: - Authenticate with Firebase using backend token
     func authenticateWithFirebase(user: User, completion: @escaping (Bool) -> Void) {

@@ -1,73 +1,136 @@
 //
 //  BookingView.swift
-//  SNI Rentals
+//  Pistoni Rentals
 //
 //  Created by Assistant on 25/01/25.
 //
 
 import SwiftUI
+import GoogleMaps
+
 
 struct BookingView: View {
     let car: Car
+    let routeInfo: RouteInfo
     @EnvironmentObject var authModel: AuthModel
     @Environment(\.dismiss) private var dismiss
     
     @State private var startDate = Date()
     @State private var endDate = Date().addingTimeInterval(24 * 60 * 60) // Next day
-    @State private var pickupLocation = ""
-    @State private var dropoffLocation = ""
     @State private var additionalServices: Set<String> = []
     @State private var isLoading = false
     @State private var showingConfirmation = false
+    
+    // Map State
+#if canImport(GoogleMaps)
+    @State private var mapPosition: GMSCameraPosition?
+#endif
+    
+    init(car: Car, routeInfo: RouteInfo) {
+        self.car = car
+        self.routeInfo = routeInfo
+#if canImport(GoogleMaps)
+        _mapPosition = State(initialValue: GMSCameraPosition.camera(withLatitude: routeInfo.fromLocation.latitude, longitude: routeInfo.fromLocation.longitude, zoom: 12.0))
+#endif
+    }
     
     private var numberOfDays: Int {
         Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 1
     }
     
     private var basePrice: Double {
-        car.price * Double(numberOfDays)
+        car.price // Daily rate
+    }
+    
+    private var totalBasePrice: Double {
+         basePrice * Double(numberOfDays)
     }
     
     private var serviceFees: Double {
-        basePrice * 0.05 // 5% service fee
+        totalBasePrice * 0.05 // 5% service fee
     }
     
     private var totalPrice: Double {
-        basePrice + serviceFees
+        totalBasePrice + serviceFees
     }
     
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Header Section - ProfileView Style
-                    bookingHeaderSection
-                    
-                    // Content Sections
-                    VStack(spacing: 20) {
-                        tripDetailsSection
-                        pickupLocationSection
-                        dropoffLocationSection
-                        priceBreakdownSection
-                        additionalServicesSection
+        NavigationStack {
+            ZStack(alignment: .top) {
+                // Map Background (Top Half)
+                GeometryReader { geometry in
+                    Group {
+#if canImport(GoogleMaps)
+                        if let _ = mapPosition {
+                            GoogleMapsView(mapPosition: Binding(
+                                get: { mapPosition ?? GMSCameraPosition.camera(withLatitude: routeInfo.fromLocation.latitude, longitude: routeInfo.fromLocation.longitude, zoom: 12.0) },
+                                set: { mapPosition = $0 }
+                            ), polylineToDraw: routeInfo.routePolyline)
+                        } else {
+                            Color.gray.opacity(0.1)
+                        }
+#else
+                        ZStack {
+                            Color.gray.opacity(0.1)
+                            VStack(spacing: 8) {
+                                Image(systemName: "map")
+                                    .font(.title)
+                                    .foregroundColor(.secondary)
+                                Text("Map preview unavailable")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+#endif
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 100) // Space for booking button
+                    .frame(height: geometry.size.height * 0.45)
+                    .edgesIgnoringSafeArea(.top)
                 }
+                
+                // Content ScrollView (Bottom Sheet Style)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Spacer for Map
+                        Color.clear
+                            .frame(height: UIScreen.main.bounds.height * 0.35)
+                        
+                        // Main Content Card
+                        VStack(spacing: 24) {
+                            // Route & Car Header
+                            bookingHeaderSection
+                            
+                            // Form Sections
+                            VStack(spacing: 20) {
+                                tripDetailsSection
+                                pickupLocationSection
+                                dropoffLocationSection
+                                priceBreakdownSection
+                                additionalServicesSection
+                            }
+                            .padding(.bottom, 100)
+                        }
+                        .padding(.top, 20)
+                        .background(Color("AppPrimary")) // Using AppPrimary for the card background
+                        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+                        .shadow(color: .black.opacity(0.1), radius: 10, y: -5)
+                    }
+                }
+                .scrollIndicators(.hidden)
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationBarTitleDisplayMode(.inline)
+            .background(Color("AppPrimary"))
             .navigationBarBackButtonHidden()
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
                         dismiss()
                     } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
-                        }
-                        .foregroundColor(.blue)
+                        Image(systemName: "arrow.left")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .frame(width: 40, height: 40)
+                            .background(.regularMaterial)
+                            .clipShape(Circle())
+                            .shadow(radius: 2)
                     }
                 }
             }
@@ -88,73 +151,71 @@ struct BookingView: View {
     
     // MARK: - Header Section
     private var bookingHeaderSection: some View {
-        VStack(spacing: 0) {
-            // Car Image
-            if let primaryImage = car.primaryImage, let imageURL = URL(string: primaryImage) {
-                AsyncImage(url: imageURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            Image(systemName: "car.fill")
-                                .font(.system(size: 60))
-                                .foregroundColor(.gray)
-                        )
+        VStack(spacing: 16) {
+            // Pill for Route Info
+            HStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    Image(systemName: "clock.fill")
+                        .font(.caption)
+                    Text(routeInfo.duration)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
                 }
-                .frame(height: 200)
-                .clipped()
+                
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 1, height: 16)
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                        .font(.caption)
+                    Text(routeInfo.distance)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
             }
+            .foregroundColor(Color("AppSecondary"))
+            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
+            .background(Color("AppSecondary").opacity(0.1))
+            .clipShape(Capsule())
             
-            // Booking Info Header
-            VStack(spacing: 0) {
-                HStack(alignment: .center, spacing: 16) {
-                    // Car Icon
-                    Image(systemName: car.vehicleType.icon)
-                        .font(.system(size: 40))
-                        .foregroundColor(Color("Secondary"))
-                        .frame(width: 60, height: 60)
-                        .background(Color("Secondary").opacity(0.1))
-                        .clipShape(Circle())
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Book Your Trip")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        
-                        Text(car.displayName)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        HStack {
-                            Text("\(numberOfDays) day\(numberOfDays == 1 ? "" : "s")")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color("Secondary"))
-                            
-                            Text("•")
-                                .foregroundColor(.secondary)
-                            
-                            Text(totalPrice, format: .currency(code: "USD"))
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color("Secondary"))
-                        }
+            // Car Info
+            HStack(spacing: 16) {
+                if let imageURLString = car.primaryImage, let url = URL(string: imageURLString) {
+                    AsyncImage(url: url) { image in
+                        image.resizable().aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Color.gray.opacity(0.1)
                     }
-                    
-                    Spacer()
+                    .frame(width: 100, height: 65)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                } else {
+                    Image(systemName: "car.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 100, height: 65)
+                        .foregroundColor(.gray.opacity(0.5))
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 20)
-                .frame(maxWidth: .infinity)
-                .background(Color("Primary"))
-                .clipShape(RoundedRectangle(cornerRadius: 25))
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(car.displayName)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text(car.vehicleType.displayName)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Text(car.priceFormatted + "/day")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color("AppSecondary"))
+                }
+                
+                Spacer()
             }
             .padding(.horizontal, 20)
-            .offset(y: -30)
         }
     }
     
@@ -199,21 +260,18 @@ struct BookingView: View {
                 ProfileMenuItem(
                     icon: "location.fill",
                     title: "Pickup Address",
-                    subtitle: pickupLocation.isEmpty ? "Select pickup location" : pickupLocation,
-                    action: {
-                        // Location picker would be shown here
-                    }
+                    subtitle: routeInfo.fromLocation.name,
+                    action: {}
                 )
                 
-                if let location = car.location {
-                                    ProfileMenuItem(
-                    icon: "mappin.circle.fill",
-                    title: "Car Location",
-                    subtitle: location.address,
-                    action: {
-                        // Car location is read-only
-                    }
-                )
+                // Show extra address details if different from name
+                if routeInfo.fromLocation.name != routeInfo.fromLocation.address {
+                    ProfileMenuItem(
+                        icon: "mappin.and.ellipse",
+                        title: "Details",
+                        subtitle: routeInfo.fromLocation.address,
+                        action: {}
+                    )
                 }
             }
         }
@@ -226,19 +284,8 @@ struct BookingView: View {
                 ProfileMenuItem(
                     icon: "location.fill",
                     title: "Dropoff Address",
-                    subtitle: dropoffLocation.isEmpty ? "Select dropoff location" : dropoffLocation,
-                    action: {
-                        // Location picker would be shown here
-                    }
-                )
-                
-                ProfileMenuItem(
-                    icon: "info.circle.fill",
-                    title: "Same as Pickup",
-                    subtitle: "Return to pickup location",
-                    action: {
-                        dropoffLocation = pickupLocation
-                    }
+                    subtitle: routeInfo.toLocation.name,
+                    action: {}
                 )
             }
         }
@@ -359,7 +406,7 @@ struct BookingView: View {
                             .background(Color.blue)
                             .clipShape(Capsule())
                     } else {
-                        Text("Confirm Booking")
+                        Text("Confirm")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
@@ -378,8 +425,6 @@ struct BookingView: View {
     
     // MARK: - Validation
     private var isValidBooking: Bool {
-        !pickupLocation.isEmpty && 
-        !dropoffLocation.isEmpty && 
         endDate > startDate &&
         startDate > Date()
     }
@@ -396,9 +441,3 @@ struct BookingView: View {
     }
 }
 
-#Preview {
-    let mockAuthModel = AuthModel()
-    mockAuthModel.isPreview = true
-    return BookingView(car: Car.sampleCar)
-        .environmentObject(mockAuthModel)
-}

@@ -27,7 +27,7 @@ struct FastTextField: View {
         }
         .padding()
         .background(Color.clear)
-        .foregroundColor(Color("Secondary"))
+        .foregroundColor(Color("AppSecondary"))
         .overlay(
             RoundedRectangle(cornerRadius: 15)
                 .stroke(Color("Accent"), lineWidth: 1)
@@ -69,7 +69,7 @@ struct FastTextFieldWithIcon: View {
                 Color.clear
             }
         })
-        .foregroundColor(Color("Secondary"))
+        .foregroundColor(Color("AppSecondary"))
         .clipShape(Capsule())
         .overlay(
             Group {
@@ -89,5 +89,5 @@ struct FastTextFieldWithIcon: View {
         FastTextFieldWithIcon(text: .constant(""), placeholder: "Email", systemImageName: "envelope")
     }
     .padding()
-    .background(Color("Primary"))
+    .background(Color("AppPrimary"))
 }

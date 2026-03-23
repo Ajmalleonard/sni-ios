@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 class CarService {
-    private let baseURL = "https://api.snicolt.com"
+    private let baseURL = "https://api.pistoni.io"
     
     // MARK: - Fetch Cars
     

@@ -123,7 +123,7 @@ class TokenManager: ObservableObject {
     // MARK: - Token Refresh (placeholder for future implementation)
     
     func refreshTokenIfNeeded(completion: @escaping (Bool) -> Void) {
-        guard let refreshToken = getCurrentRefreshToken() else {
+        guard getCurrentRefreshToken() != nil else {
             completion(false)
             return
         }

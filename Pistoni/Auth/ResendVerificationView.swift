@@ -5,11 +5,12 @@ struct ResendVerificationView: View {
     @State private var isLoading = false
     @StateObject private var authModel = AuthModel()
     @Environment(\.dismiss) private var dismiss
+    @State private var showMessageSheet: Bool = false
     
     var body: some View {
         ScrollView {
             ZStack {
-                Color("Primary").ignoresSafeArea()
+                Color("AppPrimary").ignoresSafeArea()
                 VStack(spacing: 32) {
                     HStack {
                         Spacer()
@@ -18,7 +19,7 @@ struct ResendVerificationView: View {
                         } label: {
                             Text("Cancel")
                         }
-                        .foregroundColor(Color("Secondary"))
+                        .foregroundColor(Color("AppSecondary"))
                     }
                     
                     VStack(spacing: 2) {
@@ -28,7 +29,7 @@ struct ResendVerificationView: View {
                             .scaledToFit()
                             .frame(height: 40)
                             .padding(.bottom, 30)
-                            .foregroundColor(Color("Secondary"))
+                            .foregroundColor(Color("AppSecondary"))
                         
                         Text("Verify Email")
                             .font(.largeTitle)
@@ -55,26 +56,11 @@ struct ResendVerificationView: View {
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Color("Secondary"))
-                                .foregroundColor(Color("Primary"))
+                                .background(Color("AppSecondary"))
+                                .foregroundColor(Color("AppPrimary"))
                                 .clipShape(Capsule())
                         }
                         .disabled(authModel.isLoading || email.isEmpty)
-                    }
-                    
-                    // Error and Success Messages
-                    if let errorMessage = authModel.errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .font(.footnote)
-                            .padding(.top, -10)
-                    }
-                    
-                    if let successMessage = authModel.successMessage {
-                        Text(successMessage)
-                            .foregroundColor(.green)
-                            .font(.footnote)
-                            .padding(.top, -10)
                     }
                     
                     // Help Text
@@ -97,10 +83,26 @@ struct ResendVerificationView: View {
         .loadingOverlay(isLoading: authModel.isLoading)
         .onChange(of: authModel.successMessage) { _, newValue in
             if newValue != nil {
+                showMessageSheet = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
                 }
             }
+        }
+        .onChange(of: authModel.errorMessage) { _, newValue in
+            showMessageSheet = newValue != nil
+        }
+        .sheet(isPresented: $showMessageSheet) {
+            MessageSheetView(
+                errorMessage: authModel.errorMessage,
+                successMessage: authModel.successMessage,
+                onDismiss: { showMessageSheet = false }
+            )
+            .padding(.horizontal, 32)
+            .presentationDetents([.height(UIScreen.main.bounds.height * 0.4)])
+            .presentationDragIndicator(.visible)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(.white)
         }
     }
     

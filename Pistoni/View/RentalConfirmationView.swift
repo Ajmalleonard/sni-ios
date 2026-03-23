@@ -93,7 +93,7 @@ struct RentalConfirmationView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 30)
             .frame(maxWidth: .infinity)
-            .background(Color("Primary"))
+            .background(Color("AppPrimary"))
             .clipShape(RoundedRectangle(cornerRadius: 25))
             .padding(.horizontal, 20)
         }

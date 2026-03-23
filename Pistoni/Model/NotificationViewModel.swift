@@ -26,7 +26,7 @@ class NotificationViewModel: ObservableObject {
             self.notificationService = nil
             setupMockData()
         } else {
-            self.notificationService = notificationService ?? NotificationService()
+            self.notificationService = notificationService ?? NotificationService.shared
         }
     }
     private var notificationListener: AnyCancellable?
@@ -312,8 +312,8 @@ class NotificationViewModel: ObservableObject {
     }
     
     deinit {
-        Task { @MainActor in
-            stopNotificationListener()
+        Task { @MainActor [weak self] in
+            self?.stopNotificationListener()
         }
         cancellables.removeAll()
     }

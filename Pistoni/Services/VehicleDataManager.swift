@@ -32,8 +32,8 @@ class VehicleDataManager: ObservableObject {
     }
     
     deinit {
-        Task { @MainActor in
-            stopPeriodicRefresh()
+        Task { @MainActor [weak self] in
+            self?.stopPeriodicRefresh()
         }
     }
     

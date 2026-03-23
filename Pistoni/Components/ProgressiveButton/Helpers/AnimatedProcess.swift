@@ -12,6 +12,13 @@ struct AnimatedButtonCornerRadius {
     var destination: CGFloat = 45
 }
 
+enum ProcessState: Equatable {
+    case confirm
+    case loading(message: String? = nil)
+    case success(title: String? = nil, message: String? = nil)
+    case error(title: String? = nil, message: String? = nil)
+}
+
 struct CustomAction {
     var title: String
     var background: Color
@@ -30,11 +37,28 @@ fileprivate struct AnimatedButtonProperties {
 struct AnimatedButton<Content: View, Label: View>: View {
     var cornerRadius: AnimatedButtonCornerRadius = .init()
     var customAction: CustomAction?
+    @Binding var state: ProcessState
     @ViewBuilder var content: Content
     @ViewBuilder var label: Label
     var action: (_ isCancelled: Bool) -> ()
     @State fileprivate var properties: AnimatedButtonProperties = .init()
     @Environment(\.displayScale) private var displayScale: CGFloat
+
+    private var _stateFallback: State<ProcessState> = .init(initialValue: .confirm)
+
+    init(cornerRadius: AnimatedButtonCornerRadius = .init(), customAction: CustomAction? = nil, state: Binding<ProcessState>? = nil, @ViewBuilder content: () -> Content, @ViewBuilder label: () -> Label, action: @escaping (_ isCancelled: Bool) -> ()) {
+        self.cornerRadius = cornerRadius
+        self.customAction = customAction
+        if let state {
+            self._state = state
+        } else {
+            self._state = _stateFallback.projectedValue
+        }
+        self.content = content()
+        self.label = label()
+        self.action = action
+    }
+
     var body: some View {
         Button {
             let renderer = ImageRenderer(content:
@@ -67,7 +91,7 @@ struct AnimatedButton<Content: View, Label: View>: View {
         .buttonStyle(.plain)
         /// Going to use Full-screen-cover for the animation so that the source view can be added anywhere deep inside and still the animation will work!
         .fullScreenCover(isPresented: $properties.showDeleteView) {
-            ButtonView(customAction: customAction, cornerRadius: cornerRadius, properties: $properties) {
+            ButtonView(state: $state, customAction: customAction, cornerRadius: cornerRadius, properties: $properties) {
                 content
             } action: { isUserCancelled in
                 action(isUserCancelled)
@@ -80,11 +104,13 @@ struct AnimatedButton<Content: View, Label: View>: View {
 }
 
 fileprivate struct ButtonView<Content: View>: View {
+    @Binding var state: ProcessState
     var customAction: CustomAction?
     var cornerRadius: AnimatedButtonCornerRadius
     @Binding fileprivate var properties: AnimatedButtonProperties
     @ViewBuilder var content: Content
     var action: (_ isUserCancelled: Bool) -> ()
+
     var body: some View {
         let animate = properties.animate
         let hideSource = properties.hideSource
@@ -96,10 +122,19 @@ fileprivate struct ButtonView<Content: View>: View {
             
             /// Content View
             VStack(spacing: 10) {
-                content
-                
+                switch state {
+                case .confirm:
+                    content
+                case .loading(let message):
+                    LoadingView(message: message)
+                case .success(let title, let message):
+                    SuccessView(title: title, message: message)
+                case .error(let title, let message):
+                    ErrorView(title: title, message: message)
+                }
                 ActionButtons()
             }
+            .frame(maxWidth: .infinity, alignment: .center)
             .allowsHitTesting(animate)
             .padding(20)
             .compositingGroup()
@@ -170,39 +205,100 @@ fileprivate struct ButtonView<Content: View>: View {
     /// Action Buttons
     @ViewBuilder
     private func ActionButtons() -> some View {
-        HStack(spacing: 6) {
-            Button {
-                dismiss(false)
-             } label: {
-                 Text("Cancel")
-                     .foregroundStyle(Color.primary)
-                     .frame(maxWidth: .infinity)
-                     .padding(.vertical, 11)
-                     .background(.gray.opacity(0.3))
-                     .clipShape(.capsule)
-             }
-             
-             Button {
-                 dismiss(true)
-             } label: {
-                 if let customAction {
-                     Text(customAction.title)
-                         .foregroundStyle(customAction.foreground)
-                         .frame(maxWidth: .infinity)
-                         .padding(.vertical, 11)
-                         .background(customAction.background.gradient)
-                         .clipShape(.capsule)
-                 } else {
-                     Text("Delete")
-                         .foregroundStyle(.white)
-                         .frame(maxWidth: .infinity)
-                         .padding(.vertical, 11)
-                         .background(.red.gradient)
-                         .clipShape(.capsule)
-                 }
-             }
+        switch state {
+        case .loading:
+            EmptyView()
+        case .success:
+            HStack(spacing: 6) {
+                Button { dismiss(true) } label: {
+                    Text("Done")
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(Rectangle().fill(Color.green.gradient))
+                        .clipShape(.capsule)
+                }
+                .disabled(isLoadingState)
+            }
+            .fontWeight(.medium)
+        case .error:
+            HStack(spacing: 6) {
+                Button { dismiss(false) } label: {
+                    Text("Cancel")
+                        .foregroundStyle(Color.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(.gray.opacity(0.3))
+                        .clipShape(.capsule)
+                }
+                .disabled(isLoadingState)
+
+                Button { dismiss(true) } label: {
+                    Text("Retry")
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(Rectangle().fill(Color.orange.gradient))
+                        .clipShape(.capsule)
+                }
+                .disabled(isLoadingState)
+            }
+            .fontWeight(.medium)
+        case .confirm:
+            VStack {
+                /// Dummy Content
+                VStack(alignment: .leading, spacing: 15) {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.largeTitle)
+                        .foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Text("Are you sure?")
+                        .font(.title2.bold())
+                    
+                    Text("We creating best stuff our of this powerfully language")
+                        .foregroundStyle(.gray)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.bottom, 10)
+                HStack(spacing: 6) {
+                    
+                    
+                    Button { dismiss(false) } label: {
+                        Text("Cancel")
+                            .foregroundStyle(Color.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 11)
+                            .background(.gray.opacity(0.3))
+                            .clipShape(.capsule)
+                    }
+                    .disabled(isLoadingState)
+                    
+                    Button { dismiss(true) } label: {
+                        if let customAction {
+                            Text(customAction.title)
+                                .foregroundStyle(customAction.foreground)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 11)
+                                .background(customAction.background.gradient)
+                                .clipShape(.capsule)
+                        } else {
+                            Text("Delete")
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 11)
+                                .background(Rectangle().fill(Color.red.gradient))
+                                .clipShape(.capsule)
+                        }
+                    }
+                    .disabled(isLoadingState)
+                }
+                .fontWeight(.medium)
+            }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding()
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .fontWeight(.medium)
     }
     
     func dismiss(_ status: Bool) {
@@ -239,6 +335,49 @@ fileprivate struct ButtonView<Content: View>: View {
     var sourceAnimation: Animation {
         .smooth(duration: 0.15, extraBounce: 0)
     }
+    
+    var isLoadingState: Bool { if case .loading = state { return true } else { return false } }
+    
+    @ViewBuilder
+    private func LoadingView(message: String?) -> some View {
+        VStack(alignment: .center, spacing: 12) {
+            VStack(spacing: 10) {
+                CustomLoadingView()
+                if let message, !message.isEmpty { Text(message) }
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding()
+            .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+    
+    @ViewBuilder
+    private func SuccessView(title: String?, message: String?) -> some View {
+        VStack(alignment: .center, spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.largeTitle)
+                .foregroundStyle(.green)
+            if let title, !title.isEmpty { Text(title).font(.title3.bold()) }
+            if let message, !message.isEmpty { Text(message).foregroundStyle(.secondary) }
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding()
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    
+    @ViewBuilder
+    private func ErrorView(title: String?, message: String?) -> some View {
+        VStack(alignment: .center, spacing: 12) {
+            Image(systemName: "xmark.octagon.fill")
+                .font(.largeTitle)
+                .foregroundStyle(.red)
+            if let title, !title.isEmpty { Text(title).font(.title3.bold()) }
+            if let message, !message.isEmpty { Text(message).foregroundStyle(.secondary) }
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding()
+        .fixedSize(horizontal: false, vertical: true)
+    }
 }
 
 
@@ -253,3 +392,4 @@ extension View {
         }
     }
 }
+

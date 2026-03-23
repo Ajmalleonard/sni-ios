@@ -112,6 +112,13 @@ class AuthModel: ObservableObject {
                     )
                     self.messageState = MessageState.success("Apple Sign-In successful")
                     self.saveAuthState()
+                    
+                    // Sync with TokenManager
+                    TokenManager.shared.storeTokens(
+                        accessToken: response.accessToken,
+                        refreshToken: response.refreshToken,
+                        userId: response.user.id
+                    )
                     completion(.success(response))
                     
                 case .failure(let error):
@@ -159,6 +166,7 @@ class AuthModel: ObservableObject {
         registrationState = RegistrationState()
         messageState = MessageState.none
         clearAuthState()
+        TokenManager.shared.clearTokens()
     }
     
     // MARK: - Private Async Handlers
@@ -175,6 +183,13 @@ class AuthModel: ObservableObject {
                         )
                         self.messageState = MessageState.success("Login successful")
                         self.saveAuthState()
+                        
+                        // Sync with TokenManager
+                        TokenManager.shared.storeTokens(
+                            accessToken: response.accessToken,
+                            refreshToken: response.refreshToken,
+                            userId: response.user.id
+                        )
                         
                     case .failure(let error):
                         self.messageState = MessageState.error(self.parseErrorMessage(error))
@@ -198,6 +213,13 @@ class AuthModel: ObservableObject {
                         )
                         self.messageState = MessageState.success("Google Sign-In successful")
                         self.saveAuthState()
+                        
+                        // Sync with TokenManager
+                        TokenManager.shared.storeTokens(
+                            accessToken: response.accessToken,
+                            refreshToken: response.refreshToken,
+                            userId: response.user.id
+                        )
                         
                     case .failure(let error):
                         self.messageState = MessageState.error(self.parseErrorMessage(error))
@@ -268,6 +290,13 @@ class AuthModel: ObservableObject {
                         self.registrationState = RegistrationState() // Reset registration state
                         self.messageState = MessageState.success("Registration completed successfully")
                         self.saveAuthState()
+                        
+                        // Sync with TokenManager
+                        TokenManager.shared.storeTokens(
+                            accessToken: response.accessToken,
+                            refreshToken: response.refreshToken,
+                            userId: response.user.id
+                        )
                         
                     case .failure(let error):
                         self.messageState = MessageState.error(self.parseErrorMessage(error))

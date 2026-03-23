@@ -19,7 +19,7 @@ struct RouteDetailItem: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(Color("Secondary"))
+                .foregroundColor(Color("AppSecondary"))
             
             Text(title)
                 .font(.caption)

@@ -10,16 +10,16 @@ import AuthenticationServices
 import CryptoKit
 
 struct AuthChoiceView: View {
-    var onRegisterTapped: () -> Void = {}
-    var onLoginTapped: () -> Void = {}
+
 
     
     @EnvironmentObject private var authModel: AuthModel
     @State private var nonce: String?
+    @AppStorage("log_Status") private var logStatus: Bool = false
+    @State private var showMessageSheet: Bool = false
     
     var body: some View {
         NavigationStack {
-            
                 ZStack {
                     Image("bg")
                         .resizable()
@@ -27,77 +27,67 @@ struct AuthChoiceView: View {
                         .blur(radius: 20)
                         .opacity(0.1)
                     
-                    VStack(spacing: 40) {
-                        Spacer()
-                        
-                        VStack(spacing: 20) {
-                          
-                            
-                            VStack(spacing: 8) {
-                                Text("Welcome")
-                                    .font(.title)
-                                    .fontWeight(.black)
-                                    .foregroundColor(Color("Secondary").opacity(0.8))
-                               
-                            }
+                    VStack(spacing: 20) {
+                        Spacer(minLength: 30)
+
+                        VStack(spacing: 0) {
+                            Image("authc")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 300)
+                                .clipped()
                         }
-                        
-                        Spacer()
-                        
+
+                      
+
                         VStack(spacing: 16) {
                             // Register Button
                             NavigationLink(destination: RegisterView().environmentObject(authModel).navigationBarHidden(true)) {
-                                VStack(spacing: 8) {
-                                    Text("Create Account")
-                                        .font(.headline)
-                                        .fontWeight(.semibold)
-                                }
+                                Text("Create Account")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 20)
-                                .background(Color("Secondary"))
-                                .foregroundColor(Color("Primary"))
+                                .background(Color("AppSecondary"))
+                                .foregroundColor(Color("AppPrimary"))
                                 .clipShape(Capsule())
                             }
                             
                             // Login Button
                             NavigationLink(destination: LoginView().environmentObject(authModel).navigationBarHidden(true)) {
-                                VStack(spacing: 8) {
-                                    Text("Sign In")
-                                        .font(.headline)
-                                        .fontWeight(.semibold)
-                                }
+                                Text("Sign In")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 20)
                                 .background(Color.clear)
-                                .foregroundColor(Color("Secondary"))
+                                .foregroundColor(Color("AppSecondary"))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 50)
-                                        .stroke(Color("Secondary").opacity(0.2), lineWidth: 1)
+                                        .stroke(Color("AppSecondary").opacity(0.2), lineWidth: 1)
                                 )
                             }
                             
                             // Or Divider
                             HStack {
                                 Rectangle()
-                                    .fill(Color("Secondary").opacity(0.3))
+                                    .fill(Color("AppSecondary").opacity(0.3))
                                     .frame(height: 1)
                                 
                                 Text("or")
                                     .font(.caption)
-                                    .foregroundColor(Color("Secondary").opacity(0.6))
+                                    .foregroundColor(Color("AppSecondary").opacity(0.6))
                                     .padding(.horizontal, 16)
                                 
                                 Rectangle()
-                                    .fill(Color("Secondary").opacity(0.3))
+                                    .fill(Color("AppSecondary").opacity(0.3))
                                     .frame(height: 1)
                             }
                             .padding(.vertical, 8)
                             
                             // Social Login Buttons
-                            VStack(spacing: 12) {
-                                
-                                
-                                // Replace the old Apple button
+                            HStack(spacing: 12) {
+                                // Apple button
                                 SignInWithAppleButton(.signIn) { request in
                                     let nonce = randomNonceString()
                                     self.nonce = nonce
@@ -111,74 +101,80 @@ struct AuthChoiceView: View {
                                         authModel.messageState = MessageState.error(error.localizedDescription)
                                     }
                                 }
-                                .frame(height: 55).clipShape(Capsule())
+                                .frame(width: 55, height: 55)
+                                .clipShape(Circle())
+                                .overlay(
+                                    Circle()
+                                        .fill(Color.black)
+                                        .allowsHitTesting(false)
+                                )
+                                .overlay(
+                                    Image(systemName: "applelogo")
+                                        .font(.system(size: 24, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .allowsHitTesting(false)
+                                )
                                 .disabled(authModel.isLoading)
                                 
                                 Button {
                                     authModel.signInWithGoogle()
                                 } label: {
-                                    HStack {
-                                        Image("google")
-                                            .renderingMode(.template)
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(height: 20)
-                                            .foregroundColor(Color("Secondary"))
-                                        Text("Continue with Google")
-                                            .fontWeight(.medium)
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color("Accent").opacity(0.2))
-                                    .foregroundColor(Color("Secondary"))
-                                    .clipShape(Capsule())
+                                    Image("google")
+                                        .renderingMode(.template)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 24, height: 24)
+                                        .foregroundColor(Color("AppSecondary"))
+                                        .frame(width: 55, height: 55)
+                                        .background(Color.gray.opacity(0.2))
+                                        .clipShape(Circle())
                                 }
                                 .disabled(authModel.isLoading)
                             }
                         }
                         .padding(.horizontal, 32)
-                        .background(.white)
-                        .clipShape(
-                                     RoundedCorner(radius: 30, corners: [.topLeft, .topRight])
-                                 )
-                        
-                       
-                        
-                        // Error and Success Messages
-                        VStack(spacing: 8) {
-                            if let errorMessage = authModel.errorMessage {
-                                Text(errorMessage)
-                                    .foregroundColor(.red)
-                                    .font(.footnote)
-                            }
-                            
-                            if let successMessage = authModel.successMessage {
-                                Text(successMessage)
-                                    .foregroundColor(.green)
-                                    .font(.footnote)
+
+                        // Terms and Privacy
+                        VStack(spacing: 6) {
+                            Text("Signing up for Pistoni account means you")
+                            HStack {
+                                Text("agree to the")
+                                NavigationLink("Privacy Policy", destination: LoginView().environmentObject(authModel)).underline()
+                                Text("and")
+                                NavigationLink("Terms of Service.", destination: LoginView().environmentObject(authModel)).underline()
                             }
                         }
-                        .padding(.horizontal, 32)
-                        
-                        // Terms and Privacy
-                        VStack{
-                            Text("Signing up for Pistoni account means you")
-                            HStack{
-                                Text("agree to the")
-                                NavigationLink("Privacy Policy",destination: LoginView().environmentObject(authModel)).underline()
-                                Text("and")
-                                NavigationLink("Terms of Service.",destination: LoginView().environmentObject(authModel)).underline()
-                            }}
-                        .foregroundColor(.black.opacity(0.8))
-                        .padding(.horizontal,20)
+                        .foregroundColor(Color("AppSecondary").opacity(0.8))
+                        .padding(.horizontal, 20)
                         .font(.caption)
-                        
-                        Spacer()
+
+                        Spacer(minLength: 16)
                     }
                 }
             }
             .ignoresSafeArea()
             .navigationBarHidden(true)
+            .onChange(of: authModel.successMessage) { _, newValue in
+                if newValue != nil {
+                    showMessageSheet = true
+                    logStatus = true
+                }
+            }
+            .onChange(of: authModel.errorMessage) { _, newValue in
+                showMessageSheet = newValue != nil
+            }
+            .sheet(isPresented: $showMessageSheet) {
+                MessageSheetView(
+                    errorMessage: authModel.errorMessage,
+                    successMessage: authModel.successMessage,
+                    onDismiss: { showMessageSheet = false }
+                )
+                .padding(.horizontal, 32)
+                .presentationDetents([.height(UIScreen.main.bounds.height * 0.4)])
+                .presentationDragIndicator(.visible)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(.white)
+            }
         }
  
     
@@ -224,6 +220,7 @@ struct AuthChoiceView: View {
             switch result {
             case .success:
                 authModel.setSuccessMessage("Welcome back!")
+                logStatus = true
             case .failure(let error):
                 authModel.messageState = MessageState.error(error.localizedDescription)
             }
@@ -256,4 +253,3 @@ struct AuthChoiceView: View {
     AuthChoiceView()
         .environmentObject(AuthModel())
 }
-

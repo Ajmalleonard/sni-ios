@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 class BackendSearchService: ObservableObject {
-    private let baseURL = "https://api.snicolt.com"
+    private let baseURL = "https://api.pistoni.io"
     
     // Flag to indicate if this instance is being used in a preview
     private let isPreview: Bool

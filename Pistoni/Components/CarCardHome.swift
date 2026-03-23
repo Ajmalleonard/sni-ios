@@ -130,23 +130,23 @@ struct CarListItem: View {
                             .foregroundColor(.blue)
                         Text(car.location?.city ?? "San Francisco")
                             .font(.caption)
-                            .foregroundColor(.black)
+                            .foregroundColor(Color("AppSecondary"))
                     }.padding(.horizontal,8)
                         .padding(.vertical,8)
-                        .background(.blue.opacity(0.2))
+                       
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                     
                     HStack(spacing: 4) {
                         Image(systemName: "handbag")
                             .font(.caption2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color("AppSecondary"))
                         Text("\(car.rentals?.count ?? 0) Trips")
                             .font(.caption)
                             .foregroundColor(.black)
                     }
                     .padding(.horizontal,8)
                     .padding(.vertical,8)
-                    .background(.blue.opacity(0.2))
+                   
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     Spacer()
                 }
@@ -157,11 +157,14 @@ struct CarListItem: View {
             // Book Now Button
             HStack {
                 // Price
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(car.pricePerDayFormatted)
+                HStack(alignment: .center, spacing: 2) {
+                    Text("150")
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundColor(.yellow)
                 }
                 Spacer()
                 Button {
@@ -170,18 +173,18 @@ struct CarListItem: View {
                     Text("Book Now")
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
+                        .foregroundColor(Color("AppPrimary"))
                 }
                 .padding(10)
                 .padding(.vertical,20)
                 .frame(width: 200, height: 40)
-                .background(Color.black )
+                .background(Color("AppSecondary") )
                 .clipShape(Capsule())
             }
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color.white)
+        .background(Color("AppPrimary"))
         .clipShape(RoundedRectangle(cornerRadius: 30))
     }
 }

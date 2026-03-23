@@ -14,8 +14,8 @@ struct OnboardingView: View {
     
     private let pages = [ 
         OnboardingPage(
-            title: "With Love",
-            icon: "heart_1",
+            title: "Pistoni For Every Ride",
+            icon: "Circle",
             subtitle: "We've come to simplify the mess",
             imageName: "car.circle.fill",
             description: "From luxury cars to everyday vehicles, we have the perfect ride waiting for you."
@@ -41,10 +41,11 @@ struct OnboardingView: View {
         colorScheme == .dark
     }
     
+    
     var body: some View {
         ZStack {
-            // Background with fallback
-            BackgroundView()
+           
+            
             
             VStack(spacing: 0) {
                 
@@ -75,8 +76,8 @@ struct OnboardingView: View {
                                 }
                                 .fontWeight(.semibold)
                                 .padding()
-                                .background(Color("Secondary").opacity(0))
-                                .foregroundColor(Color("Secondary"))
+                                .background(Color("AppSecondary").opacity(0))
+                                .foregroundColor(Color("AppSecondary"))
                                 .clipShape(Capsule())
                                 .background(.ultraThinMaterial, in: .capsule)
                             }
@@ -91,7 +92,7 @@ struct OnboardingView: View {
                                 }
                                 .fontWeight(.semibold)
                                 .padding()
-                                .foregroundColor(Color("Secondary"))
+                                .foregroundColor(Color("AppSecondary"))
                                 .clipShape(Capsule())
                                 .background(.black)
                             } else {
@@ -100,8 +101,8 @@ struct OnboardingView: View {
                                 }
                                 .fontWeight(.semibold)
                                 .padding()
-                                .background(Color("Secondary").opacity(0))
-                                .foregroundColor(Color("Secondary"))
+                                .background(Color("AppSecondary").opacity(0))
+                                .foregroundColor(Color("AppSecondary"))
                                 .clipShape(Capsule())
                                 .background(.ultraThinMaterial, in: .capsule)
                             }
@@ -121,9 +122,9 @@ struct OnboardingView: View {
                                     .fontWeight(.semibold)
                                     .frame(maxWidth: .infinity)
                                     .padding()
-                                    .padding(.vertical,10)
-                                    .background(Color("Secondary").opacity(0))
-                                    .foregroundColor(Color("Secondary"))
+                                    .padding(.vertical,3)
+                                    .background(Color("Main"))
+                                    .foregroundColor(Color("AppPrimary"))
                                     .clipShape(Capsule())
                                     .background(.ultraThinMaterial, in: .capsule)
                             }
@@ -140,9 +141,9 @@ struct OnboardingView: View {
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .padding(.vertical,10)
-                                .background(Color("Secondary").opacity(0))
-                                .foregroundColor(Color("Secondary"))
+                                .padding(.vertical,3)
+                                .background(Color("Main"))
+                                .foregroundColor(Color("AppPrimary"))
                                 .clipShape(Capsule())
                                 .background(.ultraThinMaterial, in: .capsule)
                             }
@@ -156,7 +157,7 @@ struct OnboardingView: View {
             HStack {
                 ForEach(0..<pages.count, id: \.self) { index in
                     Circle()
-                        .fill(index == currentPage ? Color("Secondary") : Color("Secondary").opacity(0.3))
+                        .fill(index == currentPage ? Color("AppSecondary") : Color("AppSecondary").opacity(0.3))
                         .frame(width: 10, height: 10)
                         .animation(.easeInOut(duration: 0.3), value: currentPage)
                 }
@@ -217,6 +218,8 @@ struct OnboardingStaticBackground: View {
 struct OnboardingPageView: View {
     let page: OnboardingPage
     @State private var hasAppeared = false
+    @State private var isRotating = false
+    @State private var rotationAngle: Double = 0
     
     var body: some View {
         VStack(spacing: 40) {
@@ -228,7 +231,7 @@ struct OnboardingPageView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 200, height: 300)
-                    .foregroundColor(Color("Secondary"))
+                    .foregroundColor(Color("AppSecondary"))
                     .padding(.bottom, 20)
                     .scaleEffect(hasAppeared ? 1.0 : 0.8)
                     .opacity(hasAppeared ? 1.0 : 0.0)
@@ -238,10 +241,18 @@ struct OnboardingPageView: View {
                             hasAppeared = true
                         }
                     }
+                    .rotationEffect(.degrees(rotationAngle))
+                    .onAppear {
+                        isRotating = true
+                        withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
+                            rotationAngle = 360
+                        }
+                    }
+                    .animation(nil, value: rotationAngle)
             } else {
                 Image(systemName: page.imageName)
                     .font(.system(size: 80))
-                    .foregroundColor(Color("Secondary"))
+                    .foregroundColor(Color("AppSecondary"))
                     .padding(.bottom, 20)
                     .scaleEffect(hasAppeared ? 1.0 : 0.8)
                     .opacity(hasAppeared ? 1.0 : 0.0)
@@ -257,17 +268,17 @@ struct OnboardingPageView: View {
                 Text(page.title)
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .foregroundColor(Color("Secondary"))
+                    .foregroundColor(Color("AppSecondary"))
                     .multilineTextAlignment(.center)
                 
                 Text(page.subtitle)
                     .font(.title3)
-                    .foregroundColor(Color("Secondary"))
+                    .foregroundColor(Color("AppSecondary"))
                     .multilineTextAlignment(.center)
                 
                 Text(page.description)
                     .font(.body)
-                    .foregroundColor(Color("Secondary").opacity(0.8))
+                    .foregroundColor(Color("AppSecondary").opacity(0.8))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20)
             }
@@ -291,3 +302,4 @@ struct OnboardingPage {
         print("Onboarding completed")
     }
 } 
+

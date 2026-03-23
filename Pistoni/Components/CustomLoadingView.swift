@@ -20,7 +20,7 @@ struct CustomLoadingView: View {
                         .resizable()
                         .frame(width: 50, height: 50)
                         .rotationEffect(Angle(degrees: isRotating))
-                        .animation(.linear(duration: 1).repeatForever(autoreverses: false))
+                        .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: isRotating)
                     
                     
                 }

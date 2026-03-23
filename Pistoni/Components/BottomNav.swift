@@ -23,11 +23,11 @@ struct BottomNavigationBar: View {
                             .renderingMode(.template)
                             .resizable()
                             .frame(width: 20,height:20)
-                            .foregroundColor(selectedTab == tab ? Color("Secondary") : .gray)
+                            .foregroundColor(selectedTab == tab ? Color("AppSecondary") : .gray)
                         
                         Text(tabTitle(for: tab))
                             .font(.caption2)
-                            .foregroundColor(selectedTab == tab ? Color("Secondary") : .gray)
+                            .foregroundColor(selectedTab == tab ? Color("AppSecondary") : .gray)
                     }
                 }
                 Spacer()

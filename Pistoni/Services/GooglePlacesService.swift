@@ -55,7 +55,8 @@ class GooglePlacesService: ObservableObject {
         var components = URLComponents(string: "\(baseURL)/place/autocomplete/json")
         var queryItems = [
             URLQueryItem(name: "input", value: query),
-            URLQueryItem(name: "key", value: apiKey)
+            URLQueryItem(name: "key", value: apiKey),
+            URLQueryItem(name: "components", value: "country:tz") // Restrict to Tanzania
         ]
         
         // Add location bias if provided

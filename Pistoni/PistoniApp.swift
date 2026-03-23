@@ -16,6 +16,10 @@ struct SNI_RentalsApp: App {
     @StateObject private var authModel = AuthModel()
     @Environment(\.scenePhase) private var scenePhase
     
+    // WebSocket managers
+    private let socketManager = SocketIOManager.shared
+    private let chatService = ChatWebSocketService.shared
+    
     init() {
         // Skip heavy initialization in preview mode
 //        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
@@ -37,6 +41,9 @@ struct SNI_RentalsApp: App {
                 .onChange(of: scenePhase) { _, newPhase in
                     handleScenePhaseChange(newPhase)
                 }
+                .onAppear {
+                    setupWebSocketConnection()
+                }
         }
     }
     
@@ -48,13 +55,36 @@ struct SNI_RentalsApp: App {
         switch phase {
         case .active:
             print("📱 App became active")
+            // Reconnect WebSocket if user is authenticated
+            setupWebSocketConnection()
         case .inactive:
             print("📱 App became inactive")
         case .background:
             print("📱 App went to background")
+            // Keep WebSocket connected in background for notifications
         @unknown default:
             break
         }
+    }
+    
+    
+    private func setupWebSocketConnection() {
+        // Only connect if user is authenticated
+        guard let user = authModel.currentUser,
+              let token = TokenManager.shared.getCurrentAccessToken() else {
+            print("⚠️ User not authenticated, skipping WebSocket connection")
+            return
+        }
+        
+        print("🔌 Setting up WebSocket connections for user: \(user.id)")
+        
+        // Connect main socket for chat
+        if !socketManager.connected {
+            socketManager.connect(token: token)
+        }
+        
+        // Connect notification socket using singleton
+        NotificationService.shared.connectWebSocket(token: token, userId: user.id)
     }
     
     private func setupProductionServices() {

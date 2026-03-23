@@ -12,6 +12,7 @@ import CoreLocation
 // MARK: - Google Maps SwiftUI Wrapper
 struct GoogleMapsView: UIViewRepresentable {
     @Binding var mapPosition: GMSCameraPosition
+    var polylineToDraw: String?
     @State private var mapView: GMSMapView?
     
     // Check if we're in preview mode
@@ -91,6 +92,21 @@ struct GoogleMapsView: UIViewRepresentable {
         if uiView.camera.target.latitude != newCameraPosition.target.latitude ||
            uiView.camera.target.longitude != newCameraPosition.target.longitude {
             uiView.animate(to: newCameraPosition)
+        }
+        
+        // Draw Polyline if available
+        uiView.clear() // Clear previous overlays
+        
+        if let polylineString = polylineToDraw, let path = GMSPath(fromEncodedPath: polylineString) {
+            let polyline = GMSPolyline(path: path)
+            polyline.strokeColor = UIColor(named: "AppSecondary") ?? .blue
+            polyline.strokeWidth = 4.0
+            polyline.map = uiView
+            
+            // Fit bounds
+            let bounds = GMSCoordinateBounds(path: path)
+            let update = GMSCameraUpdate.fit(bounds, withPadding: 50.0)
+            uiView.animate(with: update)
         }
     }
     
@@ -236,7 +252,7 @@ struct GoogleMapsView_Previews: PreviewProvider {
     @State static var mapPosition = GMSCameraPosition.camera(withLatitude: -6.7924, longitude: 39.2083, zoom: 15.0)
     
     static var previews: some View {
-        GoogleMapsView(mapPosition: $mapPosition)
+        GoogleMapsView(mapPosition: $mapPosition, polylineToDraw: nil)
             .onAppear {
                 // Skip Google Maps configuration in preview to avoid crashes
                 if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {

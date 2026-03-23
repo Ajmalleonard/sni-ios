@@ -156,7 +156,7 @@ struct SearchScreen: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
                 }
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 15))
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
@@ -209,7 +209,7 @@ struct SearchScreen: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
                 }
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 15))
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
@@ -245,7 +245,7 @@ struct SearchScreen: View {
 //                        .padding(.horizontal, 20)
 //                        .padding(.vertical, 16)
 //                    }
-//                    .background(Color("Primary"))
+//                    .background(Color("AppPrimary"))
 //                    .clipShape(RoundedRectangle(cornerRadius: 15))
 //                    .overlay(
 //                        RoundedRectangle(cornerRadius: 15)
@@ -270,7 +270,7 @@ struct SearchScreen: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .clipShape(RoundedRectangle(cornerRadius: 25))
     }
     
@@ -309,7 +309,7 @@ struct SearchScreen: View {
                     }
                 }
             }
-            .background(Color("Primary"))
+            .background(Color("AppPrimary"))
             .clipShape(RoundedRectangle(cornerRadius: 25))
         }
     }
@@ -332,7 +332,7 @@ struct SearchScreen: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .clipShape(RoundedRectangle(cornerRadius: 25))
     }
     
@@ -354,7 +354,7 @@ struct SearchScreen: View {
                             // Clear recent searches
                         }
                         .font(.caption)
-                        .foregroundColor(Color("Secondary"))
+                        .foregroundColor(Color("AppSecondary"))
                     }
                     .padding(.horizontal, 25)
                     
@@ -375,7 +375,7 @@ struct SearchScreen: View {
                             }
                         }
                     }
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                 }
             }
@@ -411,7 +411,7 @@ struct SearchScreen: View {
                             }
                         }
                     }
-                    .background(Color("Primary"))
+                    .background(Color("AppPrimary"))
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                 }
             }
@@ -558,17 +558,17 @@ struct SearchTypeButton: View {
             HStack(spacing: 8) {
                 Image(systemName: iconForSearchType(searchType))
                     .font(.subheadline)
-                    .foregroundColor(isSelected ? .white : Color("Secondary"))
+                    .foregroundColor(isSelected ? .white : Color("AppSecondary"))
                 
                 Text(searchType.displayName)
                     .font(.body)
                    
-                    .foregroundColor(isSelected ? .white : Color("Secondary"))
+                    .foregroundColor(isSelected ? .white : Color("AppSecondary"))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 20)
             .background(
-                isSelected ? Color("Secondary") : Color("Primary")
+                isSelected ? Color("AppSecondary") : Color("AppPrimary")
             )
             .clipShape(Capsule())
         }
@@ -595,7 +595,7 @@ struct SearchResultItem: View {
             HStack(spacing: 16) {
                 Image(systemName: "location.circle.fill")
                     .font(.title3)
-                    .foregroundColor(Color("Secondary"))
+                    .foregroundColor(Color("AppSecondary"))
                     .frame(width: 24, height: 24)
                 
                 VStack(alignment: .leading, spacing: 2) {

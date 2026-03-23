@@ -3,8 +3,41 @@ import Combine
 import FirebaseFirestore
 
 class NotificationService {
-    private let db = Firestore.firestore()
-    private let apiBaseURL = "https://api.snicolt.com/v1"
+    // Singleton instance
+    static let shared = NotificationService()
+    
+    private lazy var db = Firestore.firestore()
+    private let apiBaseURL = "https://api.pistoni.io/v1"
+    
+    // WebSocket service for realtime notifications
+    private let webSocketService = NotificationWebSocketService.shared
+    private var cancellables = Set<AnyCancellable>()
+    
+    // Private init for singleton
+    private init() {
+        print("📦 NotificationService initialized")
+    }
+    
+    // MARK: - WebSocket Initialization
+    
+    /// Initialize WebSocket connection for realtime notifications
+    func connectWebSocket(token: String, userId: String) {
+        webSocketService.connect(token: token, userId: userId)
+        
+        // Subscribe to WebSocket notifications
+        webSocketService.$newNotification
+            .compactMap { $0 }
+            .sink { notification in
+                print("🔔 Received realtime notification: \(notification.title)")
+                // You can add additional handling here (e.g., play sound, show banner)
+            }
+            .store(in: &cancellables)
+    }
+    
+    /// Disconnect WebSocket
+    func disconnectWebSocket(userId: String) {
+        webSocketService.disconnect(userId: userId)
+    }
     
     // MARK: - Primary Firebase Methods (with API sync)
     

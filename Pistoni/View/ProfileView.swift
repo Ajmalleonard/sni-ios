@@ -1,6 +1,6 @@
 //
 //  ProfileView.swift
-//  SNI Rentals
+//  Pistoni
 //
 //  Created by Jesus on 1/22/25.
 //
@@ -40,7 +40,7 @@ struct ProfileView: View {
                         // Account Actions Section
                         VStack(spacing: 0) {
                             Button {
-                                print("🚪 Logout button tapped!")
+                                print(" Logout button tapped!")
                                 authModel.logout()
                             } label: {
                                 HStack(spacing: 16) {
@@ -88,7 +88,7 @@ struct ProfileView: View {
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
-                        .background(Color("Primary"))
+                        .background(Color("AppPrimary"))
                         .clipShape(RoundedRectangle(cornerRadius: 25))
                     }
                     .padding(.top, 25)
@@ -190,7 +190,7 @@ struct ProfileHeaderView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
                 
-                Text(authModel.currentUser?.email ?? "useremail@sni.com")
+                Text(authModel.currentUser?.email ?? "useremail@pistoni.io")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -200,7 +200,7 @@ struct ProfileHeaderView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 20)
         .frame(maxWidth: .infinity)
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .clipShape(RoundedRectangle(cornerRadius: 25))
     }
 }
@@ -266,7 +266,7 @@ struct ProfileMainMenuSection: View {
                 destination: CalendarsView()
             )
         }
-        .background(Color("Primary"))
+        .background(Color("AppPrimary"))
         .clipShape(RoundedRectangle(cornerRadius: 25))
     }
 }
@@ -287,7 +287,7 @@ struct ProfileSection<Content: View>: View {
                 Text(title)
                     .font(.footnote)
                     .fontWeight(.medium)
-                    .foregroundColor(Color("Secondary"))
+                    .foregroundColor(Color("AppSecondary"))
                     .textCase(.uppercase)
                     .padding(.horizontal, 25)
             }
@@ -314,7 +314,7 @@ struct ProfileMenuItem: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.title3)
-                    .foregroundColor(Color("Secondary"))
+                    .foregroundColor(Color("AppSecondary"))
                     .frame(width: 24, height: 24)
                 
                 VStack(alignment: .leading, spacing: 2) {
@@ -551,7 +551,7 @@ struct ProfileMainMenuItem<Destination: View>: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.title3)
-                    .foregroundColor(Color("Secondary"))
+                    .foregroundColor(Color("AppSecondary"))
                     .frame(width: 24, height: 24)
                 
                 VStack(alignment: .leading, spacing: 2) {
@@ -620,7 +620,7 @@ struct PersonalInfoView: View {
                         action: { /* Handle documents */ }
                     )
                 }
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 25))
             }
             .padding(15)
@@ -692,7 +692,7 @@ struct SafetyView: View {
                         action: { /* Handle emergency settings */ }
                     )
                 }
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 25))
             }
             .padding(15)
@@ -743,7 +743,7 @@ struct LoginSecurityView: View {
                         action: { /* Handle trusted devices */ }
                     )
             }
-            .background(Color("Primary"))
+            .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 25))
             }
             .padding(15)
@@ -807,7 +807,7 @@ struct PrivacyView: View {
                         action: { /* Handle notifications */ }
                     )
                 }
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 25))
             }
             .padding(15)
@@ -850,7 +850,7 @@ struct LanguageView: View {
                         action: { /* Handle accessibility */ }
                     )
                 }
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 25))
             }
             .padding(15)
@@ -893,7 +893,7 @@ struct CalendarsView: View {
                         action: { /* Handle reminders */ }
                     )
                 }
-                .background(Color("Primary"))
+                .background(Color("AppPrimary"))
                 .clipShape(RoundedRectangle(cornerRadius: 25))
             }
             .padding(15)

@@ -5,7 +5,7 @@ import AuthenticationServices
 import UIKit
 
 class AuthService {
-    private let baseURL = "https://api.snicolt.com"
+    private let baseURL = "https://api.pistoni.io"
 //    private let baseURL = "http://localhost:1010"
 
     
@@ -61,7 +61,7 @@ class AuthService {
     }
     
     func signInWithGoogle() async throws -> LoginResponse {
-        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let presentingViewController = windowScene.windows.first?.rootViewController else {
             throw AuthError.googleSignInError("No presenting view controller found")
         }
